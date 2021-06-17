@@ -1,0 +1,306 @@
+---
+title: "Experiment 2 modelling"
+author: "Courtney Goodridge"
+date: "21/07/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Experiment 2 modelling - assessing assumptions
+
+First section of this modeling aims to do the following:
+
+- test for differences between left and right turns to justify collapsing them
+- assess distributions at the condition level and the subject level
+
+## Load packages
+
+```{r}
+# rm(list = ls()) # clear work space
+library(effsize)
+library(sjstats) # calculates effect size for ANOVA
+library(car) # performs ANOVA
+library(dplyr) # data manipulation
+library(tidyr) # data manipulation
+library(Rmisc) # for plotting interactions
+library(ggplot2) # data vis 
+library(readr) # loading data
+library(BayesFactor) # performs Bayesian ANOVA
+library(rstanarm) # bayesian regression modelling
+library(bayestestR) # describes Bayesian models and posterior distributions
+library(bayesplot) # allows plots for posterior predictive distributions
+library(fitdistrplus) # look at distribution
+library(emmeans) # for computing estimated marginal means for Bayesian models
+library(lme4) # mixed effects modelling 
+library(fitdistrplus) # shows distribution of data 
+library(gamlss) # fitting glmer with log normal distribution
+library(wesanderson) # for Wes Anderson colour palette for plots
+library(lmerTest) # provides p values for lmer models
+library(latex2exp)
+library(ez) # anova 
+library(GLMMadaptive) # covariance for multi level 
+library(r2glmm)
+library(rstatix)
+library(effsize)
+```
+
+## Load data
+
+```{r}
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data")
+magnitudedata <- read.csv("magnitudedata.csv")
+
+magnitudedata <- magnitudedata %>%
+  dplyr::filter(EarlyResponses == FALSE)
+```
+
+## Comparing steering metrics across bends
+
+```{r}
+magnitudedata <- magnitudedata %>%
+  dplyr::mutate(signed = case_when(heading_signed < 0 ~ -1,
+                                   heading_signed > 0 ~ 1))
+
+mod.rt <- ezANOVA(magnitudedata, dv = FirstSteeringTime, wid = pNum, within = .(heading, signed), type = 3, detailed = TRUE, return_aov = TRUE)
+mod.rt
+
+mod.lpe <- ezANOVA(magnitudedata, dv = lane_position, wid = pNum, within = .(heading, signed), type = 3, detailed = TRUE, return_aov = TRUE)
+mod.lpe
+
+mod.swa <- ezANOVA(magnitudedata, dv = peakSWA, wid = pNum, within = .(heading, signed), type = 3, detailed = TRUE, return_aov = TRUE)
+mod.swa
+
+
+
+magnitudedata$sign <- as.factor(as.character(magnitudedata$sign))
+
+magnitudedata %>%
+  dplyr::group_by(heading_signed) %>%
+  dplyr::summarise(swa = mean(peakSWA))
+
+t.test(FirstSteeringTime ~ heading_signed, data = magnitudedata %>%
+         dplyr::filter(heading == 2))
+
+cohen.d(FirstSteeringTime ~ heading_signed, data = magnitudedata %>%
+         dplyr::filter(heading == 2))
+```
+
+## theme settings
+
+```{r}
+theme_plot <-   theme(axis.title.x = element_text(size = 15), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 15), axis.text.y = element_text(size = 12), title = element_text(size = 12), legend.title = element_text(size = 15), legend.text = element_text(size = 15), panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"))
+```
+
+#### Experiment 2 modelling - fitting generalised linear mixed effects model.
+
+The following modeling script aims to do the following:
+
+- fit generalised linear mixed effects model to steering metrics
+
+## Zeroing heading variable
+
+```{r}
+magnitudedata$heading <- as.numeric(magnitudedata$heading)
+magnitudedata$startingpos <- as.numeric(magnitudedata$startingpos)
+
+magnitudedata <- magnitudedata %>%
+  dplyr::mutate(heading_zero = case_when(heading == 1 ~ 0,
+                                         heading == 2 ~ 1))
+```
+
+This is done for easier interpretation of the main effects. I.e. a heading of 1 degree is the baseline amount of error development. Thus the main effect indicates the effect of increasing this rate of error development by a factor of one. 
+
+## Fitting model for reaction time data 
+
+```{r}
+"fitting models"
+fit.gamma.rt <- glmer(FirstSteeringTime ~ heading_zero * startingpos + (heading_zero + startingpos | pNum),
+                      nAGQ = 0,
+                      family = Gamma(link = "identity"),
+              data = magnitudedata)
+
+fit.invgauss.rt <- glmer(FirstSteeringTime ~ heading_zero * startingpos + (heading_zero + startingpos | pNum),
+                         nAGQ = 0,
+              family = inverse.gaussian(link = "identity"),
+              data = magnitudedata)
+
+fit.gaus.rt <- lmerTest::lmer(FirstSteeringTime ~ heading_zero * startingpos + (heading_zero + startingpos | pNum),
+                    data = magnitudedata)
+
+"model assessment"
+AIC(fit.gamma.rt, fit.gaus.rt, fit.invgauss.rt)
+summary(fit.gamma.rt)
+confint(fit.gamma.rt, method = "Wald")
+VarCorr(fit.gamma.rt)
+
+"residual vs fitted"
+plot(fit.gamma.rt)
+```
+
+## Fitting model for lateral position error data 
+
+```{r}
+"fitting models"
+fit.gamma.lpe <- glmer(lane_position ~ heading_zero * startingpos + (heading_zero + startingpos | pNum),
+                       nAGQ = 0,
+              family = Gamma(link = "identity"),
+              data = magnitudedata)
+
+fit.invgauss.lpe <- glmer(lane_position ~ heading_zero * startingpos + (heading_zero + startingpos | pNum),
+                          nAGQ = 0,
+              family = inverse.gaussian(link = "identity"),
+              data = magnitudedata)
+
+fit.gaus.lpe <- lmerTest::lmer(lane_position ~ heading_zero * startingpos + (heading_zero + startingpos | pNum),
+                    data = magnitudedata)
+
+"model diagnostics"
+AIC(fit.gamma.lpe, fit.gaus.lpe, fit.invgauss.lpe)
+summary(fit.gaus.lpe)
+confint(fit.gaus.lpe, method = "Wald")
+VarCorr(fit.gaus.lpe)
+
+"residual vs fitted"
+plot(fit.gaus.rt)
+```
+
+## Fitting model for steering magnitude data 
+
+```{r}
+"fitting models"
+fit.gamma.swa <- glmer(peakSWA ~ heading_zero * startingpos + (heading_zero + startingpos | pNum),
+                       nAGQ = 0,
+              family = Gamma(link = "identity"),
+              data = magnitudedata)
+
+fit.invgauss.swa <- glmer(peakSWA ~ heading_zero * startingpos + (heading_zero + startingpos | pNum),
+                          nAGQ = 0,
+              family = inverse.gaussian(link = "identity"),
+              data = magnitudedata)
+
+fit.gaus.swa <- lmerTest::lmer(peakSWA ~ heading_zero * startingpos + (heading_zero + startingpos | pNum),
+                    data = magnitudedata)
+
+"model diagnostics"
+AIC(fit.gaus.swa, fit.gamma.swa, fit.invgauss.swa)
+summary(fit.gamma.swa)
+confint(fit.gamma.swa, method = "Wald")
+VarCorr(fit.gamma.swa)
+
+"resdiual vs fitted plots"
+plot(fit.gamma.swa)
+```
+
+## Using t-tests to investigate between-level differences for reaction time
+
+```{r}
+"2 degress of orientation offset"
+between_level <- magnitudedata %>%
+  dplyr::group_by(pNum, startingpos) %>%
+  dplyr::summarise(rt = mean(FirstSteeringTime)) %>%
+  pivot_wider(names_from = startingpos, values_from = rt) 
+
+colnames(between_level) <- c("pNum", "pos_zero", "pos_four", "pos_eight")
+
+between_level <- between_level %>%
+  dplyr::group_by(pNum) %>%
+  dplyr::mutate(zero_four = pos_zero - pos_four) %>%
+  dplyr::mutate(four_eight = pos_four - pos_eight)
+
+"0-4"
+mean(between_level$zero_four)
+sd(between_level$zero_four)
+
+"4-8"
+mean(between_level$four_eight)
+sd(between_level$four_eight)
+
+t.test(between_level$zero_four, between_level$four_eight, paired = TRUE)
+cohen.d(between_level$zero_four, between_level$four_eight)
+
+```
+
+## Using t-tests to investigate between-level differences and lateral position error
+
+```{r}
+"2 degress of orientation offset"
+between_level <- magnitudedata %>%
+  dplyr::group_by(pNum, startingpos) %>%
+  dplyr::summarise(lpe = mean(lane_position)) %>%
+  pivot_wider(names_from = startingpos, values_from = lpe) 
+
+colnames(between_level) <- c("pNum", "pos_zero", "pos_four", "pos_eight")
+
+between_level <- between_level %>%
+  dplyr::group_by(pNum) %>%
+  dplyr::mutate(zero_four = pos_zero - pos_four) %>%
+  dplyr::mutate(four_eight = pos_four - pos_eight)
+
+"0-4"
+mean(between_level$zero_four)
+sd(between_level$zero_four)
+
+"4-8"
+mean(between_level$four_eight)
+sd(between_level$four_eight)
+
+t.test(between_level$zero_four, between_level$four_eight, paired = TRUE)
+cohen.d(between_level$zero_four, between_level$four_eight, paired = TRUE)
+```
+
+## Using t-tests to investigate between-level differences and steering wheel angle
+
+```{r}
+"2 degress of orientation offset"
+between_level <- magnitudedata %>%
+  dplyr::group_by(pNum, startingpos) %>%
+  dplyr::summarise(swa = mean(peakSWA)) %>%
+  pivot_wider(names_from = startingpos, values_from = swa) 
+
+colnames(between_level) <- c("pNum", "pos_zero", "pos_four", "pos_eight")
+
+between_level <- between_level %>%
+  dplyr::group_by(pNum) %>%
+  dplyr::mutate(zero_four = pos_zero - pos_four) %>%
+  dplyr::mutate(four_eight = pos_four - pos_eight)
+
+"0-4"
+mean(between_level$zero_four)
+sd(between_level$zero_four)
+
+"4-8"
+mean(between_level$four_eight)
+sd(between_level$four_eight)
+
+t.test(between_level$zero_four, between_level$four_eight, paired = TRUE)
+cohen.d(between_level$zero_four, between_level$four_eight)
+
+"1 degress of orientation offset"
+between_level <- magnitudedata %>%
+  dplyr::group_by(pNum, heading, startingpos) %>%
+  dplyr::summarise(swa = mean(peakSWA)) %>%
+  pivot_wider(names_from = startingpos, values_from = swa) 
+
+colnames(between_level) <- c("pNum", "heading", "pos_zero", "pos_four", "pos_eight")
+
+between_level <- between_level %>%
+  dplyr::filter(heading == 1) %>%
+  dplyr::group_by(pNum) %>%
+  dplyr::mutate(zero_four = pos_zero - pos_four) %>%
+  dplyr::mutate(four_eight = pos_four - pos_eight)
+
+"0-4"
+mean(between_level$zero_four)
+sd(between_level$zero_four)
+
+"4-8"
+mean(between_level$four_eight)
+sd(between_level$four_eight)
+
+t.test(between_level$zero_four, between_level$four_eight, paired = TRUE)
+cohen.d(between_level$zero_four, between_level$four_eight)
+```

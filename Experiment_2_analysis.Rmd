@@ -1,0 +1,483 @@
+---
+title: "Experiment 2 analysis"
+author: "Courtney Goodridge"
+date: "21/07/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Experiment 2 analysis - cleaning data 
+
+The first section of the analysis aims to do the following:
+
+- select the appropriate data we want to analyse
+- mirror steering responses 
+- process steering metrics at onset and peak
+- save these metrics for each valid trials into final dataframe
+
+## Load libraries
+
+```{r}
+# rm(list = ls())
+"load packages"
+library(ggplot2) # for plots
+library(dplyr) # for manipulating data frames
+library(tidyr) # for tidying data (uniting columns)
+library(TTR) # for smoothing data with mean of observations
+library(zoo) # package for rolling mean
+library(skimr) # generates summary of data
+library(car) # to perform levene test and ANOVA
+library(png)
+library(transformr)
+library(signal) # package needed for sgolayfilt function for steering magnitude 
+library(conflicted) # shows when packages have conflicted functions # conflict_prefer("filter", "dplyr")
+library(wesanderson) # Wes Anderson colour palette
+library(EnvCpt) # peak finding function
+library(pracma) # peak finding function
+library(wesanderson) # Wes Anderson colour palette
+library(splitstackshape) # adding ID column
+library(wesanderson) # colour palettes for plotting
+library(Rmisc)
+```
+
+# Load raw data
+
+```{r}
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data") 
+temp = list.files(pattern = c("BenLui17_EXP2_")) # list all CSV files in the directory
+myfiles = lapply(temp, read.csv) # read these CSV in the directory
+workingdata <- do.call(rbind.data.frame, myfiles) # convert and combine the CSV files into dataframe
+```
+
+## Demographic information
+
+```{r}
+"age"
+workingdata %>%
+  dplyr::summarise(mean(age), max(age), min(age), median(age), sd(age))
+
+"driving license time"
+workingdata %>%
+  dplyr::summarise(mean(licenseTime), max(licenseTime), min(licenseTime), median(licenseTime), sd(licenseTime))
+
+"gender split" 
+gender <- workingdata %>%
+  dplyr::group_by(pNum, gender) %>%
+  dplyr::summarise(count = n()) %>%
+  dplyr::ungroup()
+
+print("female")
+length(dplyr::filter(gender, gender == 1)) 
+
+print("male")
+length(dplyr::filter(gender, gender == 2))
+
+length(female$gender) / length(gender$gender) * 100 
+length(male$gender) / length(gender$gender) * 100
+```
+
+## Processing timecourse
+
+```{r}
+"creating trial ID"
+workingdata <- unite(workingdata, ppid_trialn, ppid, trialn, sep = "_") # create unique ppid_trialn ID
+
+"threshold metrics"
+upperthreshold <-  0.05 # upper threshold for consistent steering response
+lowerthreshold <-  0.02 # lower threshold for when response is initiated
+
+"timecourse from when line is visible"
+linevisibletimecoursedata <- workingdata %>%
+  dplyr::mutate(StraightVisible = case_when(StraightVisible == "False" ~ 1,
+                                            StraightVisible == "True" ~ 2)) %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::filter(heading != 0) %>%
+  dplyr::filter(StraightVisible == 2) %>%
+  dplyr::mutate(frame = row_number()) %>% # create frame number column
+  dplyr::mutate(timestamp = frame / 60) %>% # creates equal timestamp for every trial
+  dplyr::mutate(YawRate_seconds = case_when(heading > 0 ~ YawRate_seconds, 
+                                            heading < 0 ~ YawRate_seconds * -1)) %>%
+  dplyr::mutate(diff_YR = c(0, diff(YawRate_seconds))) %>% 
+  dplyr::mutate(diff_YR = sgolayfilt(diff_YR, n = 11)) %>%
+  dplyr::mutate(SWA = case_when(heading > 0 ~ SWA, 
+                                heading < 0 ~ SWA * -1)) %>%
+  dplyr::mutate(diff_SWA = c(0, diff(SWA))) %>%
+  dplyr::mutate(diff_SWA = sgolayfilt(diff_SWA, n = 11)) %>%
+  dplyr::ungroup()
+
+"recentre origin of X and Z coordinates"
+linevisibletimecoursedata <- linevisibletimecoursedata %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::mutate(World_x_new = World_x - World_x[1]) %>%
+  dplyr::mutate(World_z_new = World_z - World_z[1])
+
+"rotate X and Z coordinates by the yaw of the first frame - global to local"
+linevisibletimecoursedata <- linevisibletimecoursedata %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::mutate(WorldYaw_rads = WorldYaw / 180 * pi) %>%
+  dplyr::mutate(rotatedX = World_x_new * cos(WorldYaw_rads[1]) - World_z_new * sin(WorldYaw_rads[1])) %>%
+  dplyr::mutate(rotatedZ = World_x_new * sin(WorldYaw_rads[1]) +  World_z_new * cos(WorldYaw_rads[1])) %>%
+  dplyr::ungroup()
+
+"rotating X and Z coordinates by heading angle"
+linevisibletimecoursedata <- linevisibletimecoursedata %>%
+  dplyr::mutate(heading_rads = heading / 180 * pi) %>%
+  dplyr::group_by(ppid_trialn, heading_rads) %>%
+  dplyr::mutate(rotatedX = rotatedX * cos(heading_rads) - rotatedZ * sin(heading_rads)) %>%
+  dplyr::mutate(rotatedZ = rotatedX * sin(heading_rads) +  rotatedZ * cos(heading_rads)) %>%
+  dplyr::ungroup()
+
+"mirroring X transformed coordinates"
+linevisibletimecoursedata <- linevisibletimecoursedata %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::mutate(rotatedX = case_when(heading > 0 ~ rotatedX,
+                                     heading < 0 ~ rotatedX * -1)) %>%
+  dplyr::mutate(heading_signed = heading) %>%
+  dplyr::mutate(heading = abs(heading)) %>%
+  dplyr::ungroup()
+```
+
+1) Timecourse filtered for when road line is visible. 
+
+2) Steering metrics are mirrored. 
+
+3) Coordinates are then transformed from global system to local system for plotting.
+
+4) X and Z coordinates are recentred. This means that I subtract the first world x and z coordinate from the rest of the coordinates values. This shifts them all to start from 0. 
+
+5) The coordinates are then rotated by the yaw of the first frame to convert them from global to local coordinates. 
+
+6) X and Z coordinates are then rotated by the heading angle. This means that when plotting, the road line can be plotted as a straight vertical line from 0 on the x axis, with the trajectory of the vehicle being offset.
+
+7) The rotated world x coordinate is then mirrored. 
+
+8)  A dataframe is created of the trajectories for each experimental manipulation. I start with a straight trajectory and then rotate this by the number of degrees (in radian units) for each heading to get the trajectory of the offset if drivers did not steer the vehicle. 
+
+## Trajectory
+
+```{r}
+"rotating raw trajectory"
+trajectory <- linevisibletimecoursedata %>%
+  dplyr::filter(frame <= 150) %>%
+  dplyr::group_by(heading, frame) %>%
+  dplyr::summarise(roadX = 0, roadZ = mean(rotatedZ)) %>%
+  dplyr::mutate(heading_rads = heading / 180 * pi) %>%
+  dplyr::group_by(heading_rads, frame) %>%
+  dplyr::mutate(roadX = roadX * cos(heading_rads) - roadZ * sin(heading_rads)) %>%
+  dplyr::mutate(roadZ = roadX * sin(heading_rads) +  roadZ * cos(heading_rads)) %>%
+  dplyr::ungroup()
+```
+
+## Steering response onset
+
+```{r}
+steering_onset <- linevisibletimecoursedata %>%
+  dplyr::select(ppid_trialn, heading, heading_signed, startingpos, frame, diff_YR, timestamp, pNum, WorldYaw, SWA, diff_SWA, rotatedX, rotatedZ, YawRate_seconds) %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::filter(max(diff_SWA) > upperthreshold) %>%
+  dplyr::slice(min(which(diff_SWA > lowerthreshold, 1))) %>%
+  dplyr::ungroup() %>%
+  dplyr::transmute(ppid_trialn, heading, heading_signed, startingpos, FirstSteeringTime = timestamp, pNum = pNum, startSWA = SWA, steering_rate_start = diff_SWA, start_rotatedX = rotatedX, start_rotatedZ = rotatedZ) %>%
+  dplyr::mutate(EarlyResponses = FirstSteeringTime <= 0.15)
+```
+
+Steering onset is processed and relevant metrics are selected
+
+## Steering response peak
+
+```{r}
+"filtering timecourse so only trials with a valid reaction time are analysed"
+onset_responses <- steering_onset$ppid_trialn 
+onset_responses <- as.vector(onset_responses) 
+
+onset_timecourse <- dplyr::filter(linevisibletimecoursedata, ppid_trialn %in% onset_responses) 
+
+"selecting steering peak from the timecourse"
+steering_peak <- onset_timecourse %>%
+  dplyr::select(ppid_trialn, heading, heading_signed, startingpos, frame, diff_YR, timestamp, pNum, WorldYaw, SWA, diff_SWA, rotatedX, rotatedZ, YawRate_seconds) %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::mutate(peak.swa = max(SWA)) %>% # select peak differentiated yaw from signal
+  dplyr::slice(max(first(which(SWA >= peak.swa)))) %>% # select row of data differentiated yaw is equal to the peak
+  dplyr::ungroup() %>%
+  dplyr::transmute(ppid_trialn, heading, heading_signed, startingpos, PeakSteeringTime = timestamp, pNum = pNum, peakSWA = SWA, steering_rate = diff_SWA, peak_rotatedX = rotatedX, peak_rotatedZ = rotatedZ)
+
+"merge response start and response peak dataframes"
+magnitudedata <- merge(steering_onset, steering_peak, by = "ppid_trialn")
+
+rm(steering_onset, steering_peak)
+
+magnitudedata$startingpos.y <- NULL
+magnitudedata$heading_signed.y <- NULL
+magnitudedata$heading.y <- NULL # remove duplicate column
+magnitudedata$pNum.y <- NULL # remove duplicate
+
+"renaming columns"
+colnames(magnitudedata)[colnames(magnitudedata) == 'heading.x'] <- 'heading'
+colnames(magnitudedata)[colnames(magnitudedata) == 'heading_signed.x'] <- 'heading_signed'
+colnames(magnitudedata)[colnames(magnitudedata) == 'pNum.x'] <- 'pNum'
+colnames(magnitudedata)[colnames(magnitudedata) == 'startingpos.x'] <- 'startingpos'
+
+magnitudedata <- magnitudedata %>%
+  dplyr::filter(heading > 0)
+```
+
+Peak of steering response is captured alongside relevant steering metrics. For both the start and peak of the response, the smoothed yaw rate signal is processed because a change in yaw rate indicates an active change in the direction of the vehicle. At the peak of this yaw rate change signal, the associated steering metrics are selected for each trial. 
+
+I then merge the steering onset and peak dataframes to one main dataframe. 
+
+#### Experiment 2 analysis - calculating lane position
+
+The next section of this analysis calculates the lateral position error from the road line at steering onset. The aim of this section of the analysis is:
+
+- calculate lateral position error from road line at steering onset
+- merge dataframe with main dataframe that contains the rest of the steering metrics
+
+## Selecting world coordinates at beginning and end of trial
+
+```{r}
+"obtains starting coordinates for every trial"
+trialstartcoords <- linevisibletimecoursedata %>%
+  dplyr::group_by(ppid_trialn) %>% # group by trials
+  dplyr::slice(1) %>% # slice the first value
+  dplyr::ungroup() %>%
+  dplyr::transmute(ppid_trialn, pNum, heading, heading_signed, startingpos, StartWorld_x = World_x, StartWorld_z = World_z, StartWorldYaw = WorldYaw) 
+
+"obtains ending coordinates for every trial"
+trialendcoords <- linevisibletimecoursedata %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::slice(n()) %>%
+  dplyr::ungroup() %>%
+  dplyr::transmute(EndWorld_x = World_x, EndWorld_z = World_z, EndWorldYaw = WorldYaw) # save values
+
+dat <- cbind(trialstartcoords, trialendcoords)
+
+trueresponses <- magnitudedata$ppid_trialn # selects ID tags of true responses
+trueresponses <- as.vector(trueresponses) # creates ID vector for filtering 
+
+"filters starting and ending coordinates so only valid trials are selected"
+dat <- dplyr::filter(dat, ppid_trialn %in% trueresponses) # filter the IDs in the ID vector
+```
+
+World yaw, world x and world z values at the  beginning (first frame where road line is visible) and end (last frame where line is still visible -  subject has completed their turn of the angle they have observed) trials. 
+
+## Selecting world coordinates at steering onset
+
+```{r}
+"obtains coordinates at steering onset"
+steeringonsetcoords <- linevisibletimecoursedata %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::filter(max(diff_SWA) > upperthreshold) %>%
+  dplyr::slice(min(which(diff_SWA > lowerthreshold, 1))) %>%
+  dplyr::ungroup() %>%
+  dplyr::transmute(ppid_trialn, heading, startingpos, ThreshWorldYaw = WorldYaw, ThreshWorld_x = World_x, ThreshWorld_z = World_z)
+
+"filters threshold coordinates so only valid trials are selected"
+steeringonsetcoords <- dplyr::filter(steeringonsetcoords, ppid_trialn %in% trueresponses)
+steeringonsetcoords$ppid_trialn <- NULL
+steeringonsetcoords$heading_signed <- NULL
+steeringonsetcoords$heading <- NULL
+steeringonsetcoords$startingpos <- NULL
+
+dat <- cbind(dat, steeringonsetcoords)
+```
+
+World yaw, x and z coordinates at steering onset. This is necessary in order to calculate the hypotenuse for formulating lane position i.e. how far the driver traveled across the z coordinate before they initiated steering.
+
+## Computing heading angle 
+
+```{r}
+# Notes: radians conversion = (variable / 180 *pi)
+
+dat <- dat %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::mutate(lineWorldYaw = StartWorldYaw - heading) %>%
+  dplyr::mutate(ComputedHeading = abs(lineWorldYaw - ThreshWorldYaw))
+
+for (i in 1:length(dat$ComputedHeading)){
+  if (dat$ComputedHeading[i] > 180){
+    dat$ComputedHeading[i] <- dat$ComputedHeading[i] - 360
+  }
+}
+
+dat <- dat %>%
+  dplyr::mutate(ComputedHeading = abs(ComputedHeading)) %>%
+  dplyr::mutate(ComputedHeading_radians = ComputedHeading / 180 * pi)
+```
+
+Heading angle is computed whilst also accounting for carry over from the resetting of the steering wheel angle
+
+Yaw at the start of the trial is equal to the yaw of line plus the heading angle. To compute yaw of line, I subtract the heading angle away from yaw at the start of the trial. To compute the heading,  I subtract yaw at the point of the reaction from the yaw of the line.
+
+In order to change coordinate systems, any computed heading that is above 180 degrees, I subtract 360 from it.
+
+## Investigating computed heading
+
+```{r}
+dat %>% 
+  dplyr::group_by(heading) %>%
+  dplyr::summarise(meancomputedheading = mean(ComputedHeading)) %>%
+  dplyr::mutate(heading_diff = meancomputedheading - heading)
+```
+
+Computes the difference between the manipulated heading angle and the one subjected to participants.
+
+## Computing the hypotenuse
+
+```{r}
+dat <- dat %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::mutate(a = (ThreshWorld_x - StartWorld_x)^2 + (ThreshWorld_z - StartWorld_z)^2) %>%
+  dplyr::mutate(hypotenuse = sqrt(a))
+
+for (i in 1:length(dat$hypotenuse)){
+  dat$hypotenuse_new[i] <- dat$hypotenuse[i] + dat$startingpos[i]
+}
+```
+
+Hypotenuse (longest side of a triangle and trajectory of the offset heading) is computed. This is done by subtracting the starting position X and Z coordinates from the position X and Z coordinates when the first steering response is made, squaring the result and adding them to values together. The square root is then taken.
+
+Using these coordinates means measuring the distance traveled from the moment the line appears, to the moment that the trajectory starts to change (i.e. when the first steering response is triggered).
+
+## Computing lane position
+
+```{r}
+"computing lane position"
+dat <- dat %>%
+  dplyr::mutate(lane_position = sin(ComputedHeading_radians) * hypotenuse_new) 
+
+dat %>%
+  dplyr::group_by(heading, startingpos) %>%
+  dplyr::summarise(lpe = mean(lane_position))
+
+lane_position <- dat %>%
+  dplyr::select(ppid_trialn, lane_position)
+
+magnitudedata <- merge(magnitudedata, lane_position, by = "ppid_trialn")
+```
+
+Compute sin of the computed heading and multiple by the hypotenuse to calculate the lane position in metres. This involves knowing when the hypotenuse (how far has been traveled) intersects with the sin of the heading angle. Make sure to take sin of the computed heading in radians.
+
+I then merge dataframe with lane position metrics in with the dataframe steering metrics. 
+
+## Save full magnitude of response data set
+
+```{r}
+magnitudedata <- magnitudedata %>%
+  dplyr::filter(peakSWA > 0) %>%
+  dplyr::filter(lane_position > 0)
+
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data")
+write.csv(magnitudedata, file = "magnitudedata.csv")
+```
+
+#### Experiment 2 analysis - plotting trajectories
+
+The next part of this analysis script looks at plotting the trajectories of drivers for each condition.
+
+## Calculating timecourse trials
+
+```{r}
+"load in magnitude data"
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data")
+magnitudedata <- read.csv("magnitudedata.csv")
+
+"creating trial ID tag"
+trueresponses <- magnitudedata$ppid_trialn 
+trueresponses <- as.vector(trueresponses) 
+
+"creating dataframe for true and false responses"
+'%!in%' <- function(x,y)!('%in%'(x,y))
+
+true_responses <- dplyr::filter(linevisibletimecoursedata, ppid_trialn %in% trueresponses) 
+
+false_responses <- dplyr::filter(linevisibletimecoursedata, ppid_trialn %!in% trueresponses)
+
+"early responses ID and response time coordinates"
+responses_id_coords <- magnitudedata %>%
+  dplyr::select(ppid_trialn, EarlyResponses, FirstSteeringTime, start_rotatedX, start_rotatedZ)
+
+true_responses <- merge(true_responses, responses_id_coords, by = "ppid_trialn")
+```
+
+
+## Number of trials per condition
+
+```{r}
+"overall number of trials per condition"
+overalltrials <- workingdata %>%
+  dplyr::filter(heading != 0) %>%
+  dplyr::mutate(heading = abs(heading)) %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::summarise(HeadingCondition = head(heading, n = 1), StartingPositionCondition = head(startingpos, n = 1)) %>% # select first heading 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(HeadingCondition, StartingPositionCondition) %>% # group the heading values
+  dplyr::summarise(OverallTrials = n()) %>% # calculate the number of each heading
+  dplyr::ungroup()
+
+"number of trials considered not genuine"
+notgenuine <- false_responses %>%
+  dplyr::mutate(heading = abs(heading)) %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::summarise(HeadingCondition = head(heading, n = 1), StartingPositionCondition = head(startingpos, n = 1)) %>% # select first trial
+  dplyr::ungroup() %>% 
+  dplyr::group_by(HeadingCondition, StartingPositionCondition) %>% # group the heading values
+  dplyr::summarise(NonGenuineTrials = n()) %>% # calculate the number of each heading
+  dplyr::ungroup()
+
+"percentage of overall trials excluded for not being genuine"
+trials <- cbind(overalltrials, notgenuine$NonGenuineTrials)
+
+colnames(trials) <- c("heading", "startingpos", "OverallTrials", "NonGenuineTrials")
+
+trials %>%
+  dplyr::group_by(heading, startingpos) %>%
+  dplyr::summarise(responsepercentage = (NonGenuineTrials / OverallTrials) * 100)#
+
+"percentage of genuine trials excluded for being too fast"
+genuine_too_fast <- magnitudedata %>%
+  dplyr::filter(EarlyResponses == TRUE) %>%
+  dplyr::mutate(heading = abs(heading)) %>%
+  dplyr::group_by(heading, startingpos) %>%
+  dplyr::summarise(responses = n())
+
+genuine <- true_responses %>%
+  dplyr::filter(heading != 0) %>%
+  dplyr::mutate(heading = abs(heading)) %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::summarise(HeadingCondition = head(heading, n = 1), StartingPositionCondition = head(startingpos, n = 1)) %>% # select first trial
+  dplyr::ungroup() %>% 
+  dplyr::group_by(HeadingCondition, StartingPositionCondition) %>% # group the heading values
+  dplyr::summarise(OverallTrials = n()) %>% # calculate the number of each heading
+  dplyr::ungroup()
+
+trials <- cbind(genuine, genuine_too_fast$responses)
+
+colnames(trials) <- c("heading", "startingpos", "OverallTrials", "Responses")
+
+trials %>%
+  dplyr::group_by(heading, startingpos) %>%
+  dplyr::summarise(responsepercentage = (Responses / OverallTrials) * 100)
+
+genuine_too_fast
+
+notgenuine
+```
+
+## Analysing differences between signs
+
+```{r}
+magnitudedata <- magnitudedata %>%
+  dplyr::mutate(sign = case_when(heading_signed > 0 ~ 1,
+                                 heading_signed < 0 ~ -1))
+
+ezANOVA(dv = FirstSteeringTime, wid = pNum, within = .(heading, sign), data = magnitudedata)
+
+ezANOVA(dv = lane_position, wid = pNum, within = .(heading, sign), data = magnitudedata)
+
+ezANOVA(dv = peakSWA, wid = pNum, within = .(heading, sign), data = magnitudedata)
+
+```
+

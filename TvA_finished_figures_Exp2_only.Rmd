@@ -1,0 +1,780 @@
+---
+title: "Untitled"
+author: "Courtney Goodridge"
+date: "19/05/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Packages
+
+```{r}
+# rm(list = ls())
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(latex2exp)
+library(pracma)
+library(wesanderson)
+library(gridExtra)
+library(ggsci)
+library(signal)
+library(lme4)
+library(lmerTest)
+library(ggsci)
+library(Rmisc)
+library(latex2exp)
+library(viridis)
+library(viridisLite)
+library(patchwork)
+library(Rmisc)
+library(signal)
+```
+
+## Theme plot
+
+```{r}
+theme_plot <- theme(axis.title.x = element_text(size = 15), axis.text.x = element_text(size = 15), axis.title.y = element_text(size = 15), axis.text.y = element_text(size = 15), title = element_text(size = 18), legend.title = element_text(size = 15), legend.text = element_text(size = 15), panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"))
+```
+
+## Figure 1
+
+```{r}
+slow.e <- seq(0, 5, 0.1)
+fast.e <- seq(0, 10, 0.2)
+time <- c(0:50)
+
+dat <- data.frame(time, fast.e, slow.e) %>%
+  tidyr::pivot_longer(cols = -time, names_to = "signal_type", values_to = "error")
+
+time.response <- c(18.5, 37, 22, 32)
+error.response <- c(3.7, 3.7, 4.4, 3.2)
+model <- c("T", "T", "A", "A")
+
+response.dat <- data.frame(time.response, error.response, model)
+
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
+ggplot() +
+  geom_path(dat, mapping = aes(x = time, y = error, col = signal_type)) +
+  geom_area(dat %>%
+              dplyr::filter(signal_type == "fast.e", error <= 4.4, time <= 22), mapping = aes(x = time, y = error), fill = "green", alpha = 0.5) +
+  geom_area(dat %>%
+              dplyr::filter(signal_type == "slow.e", error <= 3.2, time <= 32), mapping = aes(x = time, y = error), fill = "purple", alpha = 0.5) +
+  geom_segment(mapping = aes(x = 22, xend = 22, y = -Inf, yend = 4.4), colour = "green", size = 0.2) +
+  geom_segment(mapping = aes(x = 32, xend = 32, y = -Inf, yend = 3.2), colour = "purple", size = 0.2) +
+  geom_point(response.dat, mapping = aes(x = time.response, y = error.response, shape = model), size = 1.5) +
+  geom_hline(mapping = aes(yintercept = 3.7), linetype = "dashed") +
+  geom_label(aes(x = 0.3, y = 3.4, label = "Fixed threshold"), fontface = "bold", hjust = 0, vjust = 0.5, colour = "black", fill = "white", label.size = NA, family = "Arial", size = 2.6) +
+  scale_shape_manual(name = "Response mode", labels = c("Accumulator", "Threshold"), values = c(8, 1)) +
+  scale_colour_manual(name = "\u0116", labels = c("Fast", "Slow"), values = c("green", "purple")) +
+  ylab("Perceived control error E") +
+  xlab("Time") +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 7)) + 
+  scale_x_continuous(expand = c(0, 0), limits = c(0, 40)) +
+  theme_plot +
+  theme(legend.position = c(0.33, 0.83), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.05,0.05,0,0, unit = "cm"), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.y = element_text(size = 9), plot.title = element_text(size = 20, face = "bold"), axis.title.x = element_text(size = 9), axis.ticks.x = element_blank(), axis.text.x = element_blank(), title = element_text(size = 9), legend.title = element_text(size = 11, face = "bold"), legend.text = element_text(size = 9), axis.line.y = element_line(arrow = grid::arrow(length = unit(0.5, "cm"), ends = "last")), axis.line.x = element_line(arrow = grid::arrow(length = unit(0.5, "cm"), ends = "last"))) +
+  ggsave('Fig1.tiff', plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 300, type = 'cairo')
+```
+
+## Figure 3
+
+```{r}
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Full_Data/Exp_Design_Data")
+trajectory <- read.csv("trajectory.csv")
+experiment_2_coordinates <- read.csv("experiment_2_coordinates.csv")
+
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
+ggplot() +
+  geom_path(trajectory %>%
+              dplyr::filter(heading == 1 | heading == 2) %>%
+              dplyr::group_by(heading), mapping = aes(x = roadX, y = roadZ, group = .group), linetype = "dashed", alpha = 0.5) +
+  geom_path(trajectory %>%
+              dplyr::filter(heading == 1 | heading == 2) %>%
+              dplyr::group_by(heading) %>%
+              dplyr::mutate(roadX = roadX * -1), mapping = aes(x = roadX, y = roadZ, group = .group), linetype = "dashed", alpha = 0.5) +
+  geom_point(experiment_2_coordinates %>%
+               dplyr::filter(heading == 1, startingpos == 0) %>%
+               dplyr::slice(1), mapping = aes(x = x, y = z, fill = as.factor(startingpos)), col = "black", shape = 21, size = 2) +
+  geom_curve(experiment_2_coordinates %>%
+               dplyr::filter(heading == 1, startingpos == 0) %>%
+               dplyr::slice(1), mapping = aes(x = x, y = z, xend = z, yend = z + 2), col = "black", size = 0.5, curvature = 0, arrow = arrow(length = unit(0.04, "npc"))) +
+  annotate("text", x = 0.1, y = 0, size = 3, label = "T0") +
+  geom_point(experiment_2_coordinates %>%
+               dplyr::filter(heading == 1, startingpos == 0) %>%
+               dplyr::slice(55), mapping = aes(x = x * -1, y = z,  fill = as.factor(startingpos)), col = "black", shape = 21, size = 2) +
+  
+  geom_curve(experiment_2_coordinates %>%
+               dplyr::filter(heading == 1, startingpos == 0) %>%
+               dplyr::slice(55), mapping = aes(x = x * -1, y = z, xend = x * -1, yend = z + 2), col = "black", size = 0.5, curvature = 0, arrow = arrow(length = unit(0.04, "npc"))) +
+  annotate("text", x = 0.19, y = 7.23, size = 3, label = "T1") +
+  geom_point(experiment_2_coordinates %>%
+               dplyr::filter(heading == 2, startingpos == 4) %>%
+               dplyr::slice(1), mapping = aes(x = x * -1, y = z,  fill = as.factor(startingpos)), col = "black", shape = 21, size = 2) +
+  geom_curve(experiment_2_coordinates %>%
+               dplyr::filter(heading == 2, startingpos == 4) %>%
+               dplyr::slice(1), mapping = aes(x = x * -1, y = z, xend = x * -1, yend = z + 2), col = "black", size = 0.5, curvature = 0, arrow = arrow(length = unit(0.04, "npc"))) +
+   annotate("text", x = 0.22, y = 4, size = 3, label = "T0") +
+  geom_point(experiment_2_coordinates %>%
+               dplyr::filter(heading == 2, startingpos == 4) %>%
+               dplyr::slice(45), mapping = aes(x = x * -1, y = z,  fill = as.factor(startingpos)), col = "black", shape = 21, size = 2) +
+  geom_curve(experiment_2_coordinates %>%
+               dplyr::filter(heading == 2, startingpos == 4) %>%
+               dplyr::slice(45), mapping = aes(x = x * -1, y = z, xend = x * -1, yend = z + 2), col = "black", size = 0.5, curvature = 0, arrow = arrow(length = unit(0.04, "npc"))) +
+  annotate("text", x = 0.43, y = 9.86, size = 3, label = "T1") +
+  geom_point(experiment_2_coordinates %>%
+               dplyr::filter(heading == 2, startingpos == 8) %>%
+               dplyr::slice(1), mapping = aes(x = x, y = z,  fill = as.factor(startingpos)), col = "black", shape = 21, size = 2) +
+  geom_curve(experiment_2_coordinates %>%
+               dplyr::filter(heading == 2, startingpos == 8) %>%
+               dplyr::slice(1), mapping = aes(x = x, y = z, xend = x, yend = z + 2), col = "black", size = 0.5, curvature = 0, arrow = arrow(length = unit(0.04, "npc"))) +
+  annotate("text", x = -0.38, y = 8, size = 3, label = "T0") +
+  geom_point(experiment_2_coordinates %>%
+               dplyr::filter(heading == 2, startingpos == 8) %>%
+               dplyr::slice(45), mapping = aes(x = x, y = z,  fill = as.factor(startingpos)), col = "black", shape = 21, size = 2) +
+  geom_curve(experiment_2_coordinates %>%
+               dplyr::filter(heading == 2, startingpos == 8) %>%
+               dplyr::slice(45), mapping = aes(x = x, y = z, xend = x, yend = z + 2), col = "black", size = 0.5, curvature = 0, arrow = arrow(length = unit(0.04, "npc"))) +
+  annotate("text", x = -0.58, y = 13.85, size = 3, label = "T1") +
+  scale_fill_manual(name = " Starting position (m)", values = c("black", "darkgrey", "white"), labels = c("0", "4", "8")) +
+  geom_vline(mapping = aes(xintercept = 0), size = 1, alpha = 0.7) +
+  annotate("text", x = -0.66, y = 20.5, size = 3, label = "-2.0°") +
+  annotate("text", x = -0.33, y = 20.5, size = 3, label = "-1.0°") +
+  geom_curve(aes(x = -0.43, y = 14.85597, xend = -0.43, yend = 13.85597), colour = "black", size = 0.5, curvature = 0) +
+  geom_curve(aes(x = -0.03, y = 14.85597, xend = -0.03, yend = 13.85597), colour = "black", size = 0.5, curvature = 0) +
+  geom_curve(aes(x = -0.43, y = 14.85597, xend = -0.03, yend = 14.85597), colour = "black", size = 0.5, curvature = 0) +
+  geom_curve(aes(x = -0.23, y = 15.85597, xend = -0.23, yend = 14.85597), colour = "black", size = 0.5, curvature = 0) +
+  annotate("text", x = -0.18, y = 16.5, size = 3, label = "LPE") +
+  ylab("z (m)") +
+  xlab("x (m)") +
+  ylim(0, 21) +
+  xlim(-0.7, 0.7) +
+  theme_plot +
+  theme(legend.position = c(0.20, 0.14), legend.key.height = unit(0, 'cm'), legend.key.width = unit(0.5, 'cm'), legend.key = element_blank(), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.05,0.05,0,0, unit = "cm"), legend.key.size = unit(0, 'cm'), plot.title = element_text(size = 19, face = "bold"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 6.5), legend.text = element_text(size = 8)) +
+  ggsave('Fig3.tiff', plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 300, type = 'cairo')
+```
+
+## Figure 4
+
+```{r}
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Full_Data/Sim_Data/Exp2_sims")
+thresh.1 <- read.csv("thresh_1.csv", header = FALSE) %>%
+  dplyr::mutate(X = row_number()) %>%
+  dplyr::mutate(startingpos = 0)
+
+thresh.2 <- read.csv("thresh_2.csv", header = FALSE) %>%
+  dplyr::mutate(X = row_number()) %>%
+  dplyr::mutate(startingpos = 4)
+  
+thresh.3 <- read.csv("thresh_3.csv", header = FALSE) %>%
+  dplyr::mutate(X = row_number()) %>%
+  dplyr::mutate(startingpos = 8)
+
+thresh <- dplyr::bind_rows(thresh.1, thresh.2, thresh.3)
+
+
+time.response <- c(195, 243, 306, 180, 255, 330)
+error.response <- c(35.5, 33, 31.7, 34, 34, 34)
+startingpos <- c(8, 4, 0, 8, 4, 0)
+model <- c("A", "A", "A", "T", "T", "T")
+
+response.dat <- data.frame(time.response, error.response, startingpos, model)
+
+v.palette.1 <- pal_d3("category10")(5)[1]
+v.palette.2 <- pal_d3("category10")(5)[2]
+v.palette.3 <- pal_d3("category10")(5)[4]
+
+v.palette <- c(v.palette.1, v.palette.2, v.palette.3)
+
+"Plotting"
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
+ggplot() +
+  geom_path(thresh, mapping = aes(x = X, y = V1, col = as.factor(startingpos))) +
+  geom_area(thresh %>%
+              dplyr::filter(startingpos == 8, V1 <= 35.5, X <= 200), mapping = aes(x = X, y = V1), fill = v.palette[3], alpha = 0.2) +
+  geom_area(thresh %>%
+              dplyr::filter(startingpos == 4, V1 <= 33, X <= 243), mapping = aes(x = X, y = V1), fill = v.palette[2], alpha = 0.2) +
+  geom_area(thresh %>%
+              dplyr::filter(startingpos == 0, V1 <= 31.7, X <= 306), mapping = aes(x = X, y = V1), fill = v.palette[1], alpha = 0.2) +
+  geom_hline(mapping = aes(yintercept = 34), linetype = "dashed") +
+  geom_point(response.dat, mapping = aes(x = time.response, y = error.response, shape = model), size = 1.5) +
+  geom_curve(aes(x = 10, y = 12, xend = 10, yend = 16), colour = "black", size = 0.4, curvature = 0, arrow = arrow(length = unit(0.02, "npc"))) +
+  geom_curve(aes(x = 10, y = 12, xend = 10, yend = 10.5), colour = "black", size = 0.4, curvature = 0, arrow = arrow(length = unit(0.02, "npc"))) +
+  geom_curve(aes(x = 10, y = 7, xend = 10, yend = 3), colour = "black", size = 0.4, curvature = 0, arrow = arrow(length = unit(0.02, "npc"))) +
+  geom_curve(aes(x = 10, y = 5, xend = 10, yend = 8.5), colour = "black", size = 0.4, curvature = 0, arrow = arrow(length = unit(0.02, "npc"))) +
+  geom_segment(mapping = aes(x = 195, xend = 195, y = -Inf, yend = 35.5), colour = v.palette[3], size = 0.2) +
+  geom_segment(mapping = aes(x = 243, xend = 243, y = -Inf, yend = 33), colour = v.palette[2], size = 0.2) +
+  geom_segment(mapping = aes(x = 306, xend = 306, y = -Inf, yend = 31.7), colour = v.palette[1], size = 0.2) +
+  geom_curve(aes(x = 230, y = 5, xend = 200, yend = 5), colour = "black", size = 0.4, curvature = 0, arrow = arrow(length = unit(0.02, "npc"))) +
+  geom_curve(aes(x = 230, y = 5, xend = 240, yend = 5), colour = "black", size = 0.4, curvature = 0, arrow = arrow(length = unit(0.02, "npc"))) +
+  geom_curve(aes(x = 270, y = 5, xend = 250, yend = 5), colour = "black", size = 0.4, curvature = 0, arrow = arrow(length = unit(0.02, "npc"))) +
+  geom_curve(aes(x = 250, y = 5, xend = 300, yend = 5), colour = "black", size = 0.4, curvature = 0, arrow = arrow(length = unit(0.02, "npc"))) +
+  geom_label(mapping = aes(x = 0, y = 31.2, label = "Fixed threshold"), fontface = "bold", hjust = 0, vjust = 0.5, colour = "black", fill = "white", label.size = NA, family = "Arial", size = 2.6) +
+  scale_colour_manual(name = c("Initial E"), values = v.palette, labels = c("Low", "Medium", "High"), guide = guide_legend(reverse = TRUE)) +
+  scale_shape_manual(name = "Response mode", labels = c("Accumulator", "Threshold"), values = c(8, 1)) +
+  scale_x_continuous(limits = c(0, 350), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(0, 65), expand = c(0, 0)) +
+  xlab("Time") +
+  ylab("Perceived control error E") +
+  theme_plot +
+  theme(legend.position = c(0.33, 0.83), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.05,0.05,0,0, unit = "cm"), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.y = element_text(size = 9), plot.title = element_text(size = 20, face = "bold"), axis.title.x = element_text(size = 9), axis.ticks.x = element_blank(), axis.text.x = element_blank(), title = element_text(size = 9), legend.title = element_text(size = 11, face = "bold"), legend.text = element_text(size = 9), axis.line.y = element_line(arrow = grid::arrow(length = unit(0.5, "cm"), ends = "last")), axis.line.x = element_line(arrow = grid::arrow(length = unit(0.5, "cm"), ends = "last"))) +
+  ggsave('Fig4.tiff', plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 300, type = 'cairo')
+```
+
+## Figure 5
+
+```{r}
+"load in model predictions"
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data/Sim_Data")
+accum_response_latency <- read.csv("accum_rt_latency_exp2.csv", header = FALSE)
+threshold_response_latency <- read.csv("threshold_rt_latency_exp2.csv", header = FALSE)
+
+"cleaning dataframes"
+accum_response_latency$V1 <- NULL
+accum_response_latency <- accum_response_latency[-c(1),]
+
+colnames(accum_response_latency) <- c("startingpos", "perceptual_var", "model", "heading", "rt")
+
+threshold_response_latency$V1 <- NULL
+threshold_response_latency <- threshold_response_latency[-c(1),]
+
+colnames(threshold_response_latency) <- c("startingpos", "perceptual_var", "model", "heading", "rt")
+
+"changing data types"
+accum_response_latency$rt <- as.numeric(as.character(accum_response_latency$rt))
+accum_response_latency$startingpos <- as.numeric(as.character(accum_response_latency$startingpos))
+accum_response_latency$heading <- as.numeric(as.character(accum_response_latency$heading))
+
+threshold_response_latency$rt <- as.numeric(as.character(threshold_response_latency$rt))
+threshold_response_latency$startingpos <- as.numeric(as.character(threshold_response_latency$startingpos))
+threshold_response_latency$heading <- as.numeric(as.character(threshold_response_latency$heading))
+
+threshold_response_latency <- threshold_response_latency %>%
+  dplyr::mutate(rt = rt / 3)
+
+sim_preds_response <- rbind(accum_response_latency, threshold_response_latency) 
+
+
+"RT predictionsfor experiment 2"
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
+ggplot(sim_preds_response %>%
+         dplyr::filter(perceptual_var == "visual_angle"), mapping = aes(x = heading, y = rt, linetype = as.factor(startingpos), col = model)) +
+  geom_line() +
+  scale_linetype_manual(name = "Starting position (m)", labels = c("0", "4", "8"),  values = c("dotted", "dashed", "solid")) +
+  scale_colour_manual(name = "Framework", labels = c("Accumulator", "Threshold"), values = c("red", "blue")) +
+  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
+  ylab("Reaction time (s)") +
+  ylim(0, 1.3) +
+  theme_plot +
+  theme(legend.position = c(0.66, 0.78), legend.key.height = unit(0, 'cm'), legend.margin = margin(0,0,0,0, unit = "cm"), legend.key.width = unit(0.5, 'cm'), legend.key = element_blank(), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 9), legend.text = element_text(size = 9)) +
+  facet_grid(~ model) +
+  ggsave('Fig5.tiff', plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 300,  type = 'cairo')
+```
+
+## Figure 6
+
+```{r}
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data/Sim_Data")
+accum_error_latency <- read.csv("accum_lpe_latency_exp2.csv", header = FALSE)
+threshold_error_latency <- read.csv("threshold_lpe_latency_exp2.csv", header = FALSE)
+
+"cleaning dataframes"
+accum_error_latency$V1 <- NULL
+accum_error_latency <- accum_error_latency[-c(1),]
+
+colnames(accum_error_latency) <- c("startingpos", "perceptual_var", "model", "heading", "LPE")
+
+threshold_error_latency$V1 <- NULL
+threshold_error_latency <- threshold_error_latency[-c(1),]
+
+colnames(threshold_error_latency) <- c("startingpos", "perceptual_var", "model", "heading", "LPE")
+
+"changing data types"
+accum_error_latency$LPE <- as.numeric(as.character(accum_error_latency$LPE))
+accum_error_latency$startingpos <- as.numeric(as.character(accum_error_latency$startingpos))
+accum_error_latency$heading <- as.numeric(as.character(accum_error_latency$heading))
+
+threshold_error_latency$LPE <- as.numeric(as.character(threshold_error_latency$LPE))
+threshold_error_latency$startingpos <- as.numeric(as.character(threshold_error_latency$startingpos))
+threshold_error_latency$heading <- as.numeric(as.character(threshold_error_latency$heading))
+
+"scaling factor"
+threshold_error_latency <- threshold_error_latency %>%
+  dplyr::mutate(LPE = case_when(startingpos == 8 ~ LPE,
+                                    startingpos == 4 ~ LPE + 0.016,
+                                    startingpos == 0 ~ LPE + 0.016)) 
+
+sim_preds_error <- rbind(accum_error_latency, threshold_error_latency)
+
+"LPE predictions"
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
+ggplot(sim_preds_error %>%
+         dplyr::filter(perceptual_var == "visual_angle"), mapping = aes(x = heading, y = LPE, linetype = as.factor(startingpos), col = model)) +
+  geom_line() +
+  scale_linetype_manual(name = "Starting position (m)", labels = c("0", "4", "8"),  values = c("dotted", "dashed", "solid")) +
+  scale_colour_manual(name = "Framework", labels = c("Accumulator", "Threshold"), values = c("red", "blue")) +
+  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
+  ylab("Lateral position error (m)") +
+  ylim(0, 0.3) +
+  theme_plot +
+  theme(legend.position = c(0.75, 0.75), legend.key.height = unit(0, 'cm'), legend.key.width = unit(0.5, 'cm'), legend.key = element_blank(), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 9), legend.text = element_text(size = 9)) +
+  facet_grid(~ model) +
+  ggsave('Fig6.tiff', plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 300,  type = 'cairo')
+```
+
+## Figure 7
+
+```{r}
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Full_Data") 
+magnitudedata <- read.csv("magnitudedata.csv") %>%
+  dplyr::filter(EarlyResponses == FALSE)
+
+"set working directory and load data"
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Full_Data") 
+temp = list.files(pattern = c("BenLui17_")) # list all CSV files in the directory
+myfiles = lapply(temp, read.csv) # read these CSV in the directory
+workingdata <- do.call(rbind.data.frame, myfiles) # convert and combine the CSV files into dataframe
+
+workingdata <- unite(workingdata, ppid_trialn, ppid, trialn, sep = "_") # create unique ppid_trialn ID
+
+"threshold metrics"
+upperthreshold <-  0.05 # upper threshold for consistent steering response
+lowerthreshold <-  0.02 # lower threshold for when response initiated
+
+"(1) + (2) timecourse from when line is visible"
+linevisibletimecoursedata <- workingdata %>%
+  dplyr::mutate(StraightVisible = case_when(StraightVisible == "False" ~ 1,
+                                            StraightVisible == "True" ~ 2)) %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::filter(heading != 0) %>%
+  dplyr::filter(StraightVisible == 2) %>%
+  dplyr::mutate(frame = row_number()) %>% # create frame number column
+  dplyr::mutate(timestamp = frame / 60) %>% # creates equal timestamp for every trial
+  dplyr::mutate(YawRate_seconds = case_when(heading > 0 ~ YawRate_seconds, 
+                                            heading < 0 ~ YawRate_seconds * -1)) %>%
+  dplyr::mutate(diff_YR = c(0, diff(YawRate_seconds))) %>% 
+  dplyr::mutate(diff_YR_smooth = sgolayfilt(diff_YR, n = 11)) %>%
+  dplyr::mutate(SWA = case_when(heading > 0 ~ SWA, 
+                                heading < 0 ~ SWA * -1)) %>%
+  dplyr::mutate(diff_SWA = c(0, diff(SWA))) %>%
+  dplyr::mutate(diff_SWA_smooth = sgolayfilt(diff_SWA, n = 11)) %>%
+  dplyr::ungroup()
+
+"(3) recentre origin of X and Z coordinates"
+linevisibletimecoursedata <- linevisibletimecoursedata %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::mutate(World_x_new = World_x - World_x[1]) %>%
+  dplyr::mutate(World_z_new = World_z - World_z[1])
+
+"(4) rotate X and Z coordinates by the yaw of the first frame - global to local"
+linevisibletimecoursedata <- linevisibletimecoursedata %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::mutate(WorldYaw_rads = WorldYaw / 180 * pi) %>%
+  dplyr::mutate(rotatedX = World_x_new * cos(WorldYaw_rads[1]) - World_z_new * sin(WorldYaw_rads[1])) %>%
+  dplyr::mutate(rotatedZ = World_x_new * sin(WorldYaw_rads[1]) +  World_z_new * cos(WorldYaw_rads[1])) %>%
+  dplyr::ungroup()
+
+"(5) rotating X and Z coordinates by heading angle"
+linevisibletimecoursedata <- linevisibletimecoursedata %>%
+  dplyr::mutate(heading_rads = heading / 180 * pi) %>%
+  dplyr::group_by(ppid_trialn, heading_rads) %>%
+  dplyr::mutate(rotatedX = rotatedX * cos(heading_rads) - rotatedZ * sin(heading_rads)) %>%
+  dplyr::mutate(rotatedZ = rotatedX * sin(heading_rads) +  rotatedZ * cos(heading_rads)) %>%
+  dplyr::ungroup()
+
+"(6) mirroring X transformed coordinates"
+linevisibletimecoursedata <- linevisibletimecoursedata %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::mutate(rotatedX = case_when(heading > 0 ~ rotatedX,
+                                     heading < 0 ~ rotatedX * -1)) %>%
+  dplyr::mutate(heading_signed = heading) %>%
+  dplyr::mutate(heading = abs(heading)) %>%
+  dplyr::ungroup()
+
+"creating trial ID tag"
+trueresponses <- magnitudedata$ppid_trialn 
+trueresponses <- as.vector(trueresponses) 
+
+"creating dataframe for true and false responses"
+'%!in%' <- function(x,y)!('%in%'(x,y))
+
+true_responses <- dplyr::filter(linevisibletimecoursedata, ppid_trialn %in% trueresponses) 
+
+false_responses <- dplyr::filter(linevisibletimecoursedata, ppid_trialn %!in% trueresponses)
+
+"early responses ID added to timecourse"
+responses_id <- magnitudedata %>%
+  dplyr::select(ppid_trialn, EarlyResponses, FirstSteeringTime)
+
+true_responses <- merge(true_responses, responses_id, by = "ppid_trialn")
+
+plot.steering.dat <- true_responses %>%
+  dplyr::filter(EarlyResponses == FALSE) %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::mutate(peak.sr = max(diff_SWA_smooth), peak.swa = max(SWA)) %>%
+  dplyr::filter(peak.sr > 0.8) %>%
+  dplyr::filter(abs(heading) == 2) %>%
+  dplyr::filter(ppid_trialn == "14_2_32")
+
+swa.plot <- ggplot() +
+  geom_line(plot.steering.dat, mapping = aes(x = timestamp, y = SWA)) +
+  geom_point(magnitudedata %>%
+               dplyr::filter(ppid_trialn == "14_2_32"), mapping = aes(x = PeakSteeringTime, y = peakSWA)) +
+  scale_x_continuous(limits = c(0, 2.5), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(-7, 14), expand = c(0, 0)) +
+  ggtitle("B") +
+  ylab("Steering wheel angle (°)") +
+  xlab("Time (s)") +
+  theme_plot +
+  theme(legend.position = c(0.85, 0.90), legend.key.height = unit(0, 'cm'), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 7), legend.text = element_text(size = 7)) 
+
+sr.plot <- ggplot(data = plot.steering.dat) +
+  geom_line(aes(x = timestamp, y = diff_SWA), alpha = 0.4, colour = "red") +
+  geom_line(aes(x = timestamp, y = diff_SWA_smooth)) +
+  geom_segment(aes(x = FirstSteeringTime - 0.1, xend = FirstSteeringTime + 0.1, y = 0.06, yend = 0.06), colour = "black", size = 0.5, alpha = 0.4) +
+  geom_segment(aes(x = FirstSteeringTime - 0.1, xend = FirstSteeringTime + 0.1, y = 0.02, yend = 0.02), colour = "black", size = 0.5, alpha = 0.4) +
+  geom_vline(aes(xintercept = FirstSteeringTime)) +
+  theme_plot +
+  theme(legend.position = c(0.85, 0.90), legend.key.height = unit(0, 'cm'), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 7), legend.text = element_text(size = 7)) +
+  ggtitle("A") +
+  ylab("Steering rate (°/s)") +
+  xlab("Time (s)") +
+  scale_x_continuous(limits = c(0, 2.5), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(-1, 1.2), expand = c(0, 0)) 
+
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
+g <- arrangeGrob(sr.plot, swa.plot, nrow = 1)
+ggsave('Fig7.tiff', g,  width = 15, height = 7, units = 'cm', dpi = 300, type = 'cairo')
+```
+
+## Figure 8
+
+```{r}
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data") 
+temp = list.files(pattern = c("BenLui17_EXP2_")) # list all CSV files in the directory
+myfiles = lapply(temp, read.csv) # read these CSV in the directory
+workingdata <- do.call(rbind.data.frame, myfiles) # convert and combine the CSV files into dataframe
+
+"creating trial ID"
+workingdata <- unite(workingdata, ppid_trialn, ppid, trialn, sep = "_") # create unique ppid_trialn ID
+
+"threshold metrics"
+upperthreshold <-  0.05 # upper threshold for consistent steering response
+lowerthreshold <-  0.02 # lower threshold for when response is initiated
+
+"timecourse from when line is visible"
+linevisibletimecoursedata <- workingdata %>%
+  dplyr::mutate(StraightVisible = case_when(StraightVisible == "False" ~ 1,
+                                            StraightVisible == "True" ~ 2)) %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::filter(heading != 0) %>%
+  dplyr::filter(StraightVisible == 2) %>%
+  dplyr::mutate(frame = row_number()) %>% # create frame number column
+  dplyr::mutate(timestamp = frame / 60) %>% # creates equal timestamp for every trial
+  dplyr::mutate(YawRate_seconds = case_when(heading > 0 ~ YawRate_seconds, 
+                                            heading < 0 ~ YawRate_seconds * -1)) %>%
+  dplyr::mutate(diff_YR = c(0, diff(YawRate_seconds))) %>% 
+  dplyr::mutate(diff_YR = sgolayfilt(diff_YR, n = 11)) %>%
+  dplyr::mutate(SWA = case_when(heading > 0 ~ SWA, 
+                                heading < 0 ~ SWA * -1)) %>%
+  dplyr::mutate(diff_SWA = c(0, diff(SWA))) %>%
+  dplyr::mutate(diff_SWA = sgolayfilt(diff_SWA, n = 11)) %>%
+  dplyr::ungroup()
+
+"recentre origin of X and Z coordinates"
+linevisibletimecoursedata <- linevisibletimecoursedata %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::mutate(World_x_new = World_x - World_x[1]) %>%
+  dplyr::mutate(World_z_new = World_z - World_z[1])
+
+"rotate X and Z coordinates by the yaw of the first frame - global to local"
+linevisibletimecoursedata <- linevisibletimecoursedata %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::mutate(WorldYaw_rads = WorldYaw / 180 * pi) %>%
+  dplyr::mutate(rotatedX = World_x_new * cos(WorldYaw_rads[1]) - World_z_new * sin(WorldYaw_rads[1])) %>%
+  dplyr::mutate(rotatedZ = World_x_new * sin(WorldYaw_rads[1]) +  World_z_new * cos(WorldYaw_rads[1])) %>%
+  dplyr::ungroup()
+
+"rotating X and Z coordinates by heading angle"
+linevisibletimecoursedata <- linevisibletimecoursedata %>%
+  dplyr::mutate(heading_rads = heading / 180 * pi) %>%
+  dplyr::group_by(ppid_trialn, heading_rads) %>%
+  dplyr::mutate(rotatedX = rotatedX * cos(heading_rads) - rotatedZ * sin(heading_rads)) %>%
+  dplyr::mutate(rotatedZ = rotatedX * sin(heading_rads) +  rotatedZ * cos(heading_rads)) %>%
+  dplyr::ungroup()
+
+"mirroring X transformed coordinates"
+linevisibletimecoursedata <- linevisibletimecoursedata %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::mutate(rotatedX = case_when(heading > 0 ~ rotatedX,
+                                     heading < 0 ~ rotatedX * -1)) %>%
+  dplyr::mutate(heading_signed = heading) %>%
+  dplyr::mutate(heading = abs(heading)) %>%
+  dplyr::ungroup()
+
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Full_Data/Exp_Design_Data")
+trajectory <- read.csv("trajectory.csv")
+
+"load in magnitude data"
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data")
+magnitudedata <- read.csv("magnitudedata.csv")
+
+magnitudedata <- magnitudedata %>%
+  dplyr::filter(EarlyResponses == FALSE)
+
+"creating trial ID tag"
+trueresponses <- magnitudedata$ppid_trialn 
+trueresponses <- as.vector(trueresponses) 
+
+"creating dataframe for true and false responses"
+'%!in%' <- function(x,y)!('%in%'(x,y))
+
+true_responses <- dplyr::filter(linevisibletimecoursedata, ppid_trialn %in% trueresponses) 
+
+false_responses <- dplyr::filter(linevisibletimecoursedata, ppid_trialn %!in% trueresponses)
+
+"early responses ID and response time coordinates"
+responses_id_coords <- magnitudedata %>%
+  dplyr::select(ppid_trialn, EarlyResponses, FirstSteeringTime, start_rotatedX, start_rotatedZ)
+
+true_responses <- merge(true_responses, responses_id_coords, by = "ppid_trialn")
+
+
+"obtain x coordinate after travelling for 4 or 8 metres across the z direction of the experimental offset trajectory"
+four_x_coord <- trajectory %>%
+  dplyr::group_by(heading) %>%
+  slice(min(which(roadZ >= 4, 1))) %>%
+  ungroup() %>%
+  transmute(heading, x_four = roadX)
+
+eight_x_coord <- trajectory %>%
+  dplyr::group_by(heading) %>%
+  slice(min(which(roadZ >= 8, 1))) %>%
+  ungroup() %>%
+  transmute(heading, x_eight = roadX)
+
+"join 4m and 8m x coordinates, convert to long format and then add starting position indicator"
+x_coord <- left_join(four_x_coord, eight_x_coord, by = "heading") %>%
+  tidyr::gather(key = "x", value = "coordinate", x_eight, x_four) %>%
+  dplyr::mutate(startingpos = case_when(x == "x_eight" ~ 8,
+                                        x == "x_four" ~ 4))
+"join new coordinates with main dataset"
+true_responses <- left_join(true_responses, x_coord, by = c("heading", "startingpos"))
+
+"adding the x and z value that move the trajectory position forward"
+true_responses <- true_responses %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::mutate(rotatedX = case_when(heading == 1 & startingpos == 0 ~ rotatedX,
+                                     heading == 2 & startingpos == 0 ~ rotatedX,
+                                     heading == 1 & startingpos == 4 ~ rotatedX + coordinate,
+                                     heading == 2 & startingpos == 4 ~ rotatedX + coordinate,
+                                     heading == 1 & startingpos == 8 ~ rotatedX + coordinate,
+                                     heading == 2 & startingpos == 8 ~ rotatedX + coordinate)) %>%
+  dplyr::mutate(start_rotatedX = case_when(heading == 1 & startingpos == 0 ~ start_rotatedX,
+                                           heading == 2 & startingpos == 0 ~ start_rotatedX,
+                                           heading == 1 & startingpos == 4 ~ start_rotatedX + coordinate,
+                                           heading == 2 & startingpos == 4 ~ start_rotatedX + coordinate,
+                                           heading == 1 & startingpos == 8 ~ start_rotatedX + coordinate,
+                                           heading == 2 & startingpos == 8 ~ start_rotatedX + coordinate)) %>%
+  dplyr::mutate(rotatedZ = case_when(startingpos == 0 ~ rotatedZ,
+                                     startingpos == 4 ~ rotatedZ + 4,
+                                     startingpos == 8 ~ rotatedZ + 8)) %>%
+  dplyr::mutate(start_rotatedZ = case_when(startingpos == 0 ~ start_rotatedZ,
+                                           startingpos == 4 ~ start_rotatedZ + 4,
+                                           startingpos == 8 ~ start_rotatedZ + 8))
+
+"plot colour scheme"
+my_cols <- c("#0B775E", "#F2300F")
+
+"Trajectory plot for Experiment 2"
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
+ggplot() +
+  geom_path(true_responses %>%
+              dplyr::filter(frame <= 150) %>%
+              dplyr::filter(EarlyResponses == FALSE) %>%
+              dplyr::group_by(heading, startingpos, frame) %>%
+              dplyr::summarise(x = mean(rotatedX), z = mean(rotatedZ)) %>%
+              dplyr::mutate(z = case_when(startingpos == 0 ~ z,
+                                          startingpos == 4 ~ z,
+                                          startingpos == 8 ~ z)), mapping = aes(x = x, y = z, linetype = as.factor(startingpos), alpha = as.factor(startingpos), col = as.factor(heading))) +
+  scale_colour_manual(name = "Orientation (°)", labels = c("1", "2"), values = c(my_cols)) +
+  scale_linetype_manual(name = "Starting position (m)", values = c("dotted", "dashed", "solid")) +
+  scale_alpha_manual(name = "Starting position (m)", values = c(0.35, 0.65, 1), guide = FALSE) +
+  geom_point(true_responses %>%
+               dplyr::filter(EarlyResponses == FALSE) %>%
+               dplyr::group_by(heading, startingpos) %>%
+               dplyr::summarise(x = mean(start_rotatedX), z = mean(start_rotatedZ)) %>%
+               dplyr::mutate(z = case_when(startingpos == 0 ~ z,
+                                          startingpos == 4 ~ z,
+                                          startingpos == 8 ~ z)), mapping = aes(x = x, y = z, col = as.factor(heading)), size = 1) +
+  geom_vline(aes(xintercept = 0), size = 1) +
+  xlab("x (m)") +
+  ylab("z (m)") +
+  ylim(0, 30) +
+  xlim(-0.65, 0) +
+  scale_y_continuous(expand = c(0, 0)) +
+  theme_plot +
+  theme(legend.position = c(0.25, 0.24), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.1,0.1,0,0, unit = "cm"), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 8), legend.text = element_text(size = 8)) +
+  ggsave('Fig8.tiff', plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 300, type = 'cairo')
+```
+
+## Figure 9
+
+## Figure 13
+
+```{r}
+"load in model predictions"
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data/Sim_Data")
+accum_response_latency <- read.csv("accum_rt_latency_exp2.csv", header = FALSE)
+threshold_response_latency <- read.csv("threshold_rt_latency_exp2.csv", header = FALSE)
+
+"cleaning dataframes"
+accum_response_latency$V1 <- NULL
+accum_response_latency <- accum_response_latency[-c(1),]
+
+colnames(accum_response_latency) <- c("startingpos", "perceptual_var", "model", "heading", "rt")
+
+threshold_response_latency$V1 <- NULL
+threshold_response_latency <- threshold_response_latency[-c(1),]
+
+colnames(threshold_response_latency) <- c("startingpos", "perceptual_var", "model", "heading", "rt")
+
+"changing data types"
+accum_response_latency$rt <- as.numeric(as.character(accum_response_latency$rt))
+accum_response_latency$startingpos <- as.numeric(as.character(accum_response_latency$startingpos))
+accum_response_latency$heading <- as.numeric(as.character(accum_response_latency$heading))
+
+threshold_response_latency$rt <- as.numeric(as.character(threshold_response_latency$rt))
+threshold_response_latency$startingpos <- as.numeric(as.character(threshold_response_latency$startingpos))
+threshold_response_latency$heading <- as.numeric(as.character(threshold_response_latency$heading))
+
+sim_preds_response <- rbind(accum_response_latency, threshold_response_latency)
+
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data")
+magnitudedata <- read.csv("magnitudedata.csv")
+
+magnitudedata <- magnitudedata %>%
+  dplyr::filter(EarlyResponses == FALSE)
+
+"RT predictions and data"
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
+ggplot(sim_preds_response %>%
+         dplyr::filter(perceptual_var == "visual_angle"), mapping = aes(x = heading, y = rt, linetype = as.factor(startingpos), col = model)) +
+  geom_line() +
+  scale_linetype_manual(name = "Starting position (m)", labels = c("0", "4", "8"),  values = c("dotted", "dashed", "solid")) +
+  scale_colour_manual(name = "Framework", labels = c("Accumulator", "Threshold"), values = c("red", "blue")) +
+  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
+  ylab("Reaction time (s)") +
+  ylim(0, 1.2) +
+  theme_plot +
+  theme(legend.position = c(0.85, 0.75), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 7.5), legend.text = element_text(size = 7.5)) +
+  facet_grid(~ model) +
+  ggsave('Fig9.1.tiff', plot = last_plot(), width = 10, height = 7, units = 'cm', dpi = 900, type = 'cairo')
+
+errorbar.rt <- summarySE(magnitudedata, measurevar = "FirstSteeringTime", groupvars = c("heading", "startingpos"))
+
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
+ggplot() +
+  geom_point(data = errorbar.rt, mapping = aes(x = heading, y = FirstSteeringTime)) +
+  geom_line(data = errorbar.rt, mapping = aes(x = heading, linetype = as.factor(startingpos), group = as.factor(startingpos), y = FirstSteeringTime)) +
+  geom_errorbar(data = errorbar.rt, mapping = aes(x = heading, y = FirstSteeringTime, ymin = FirstSteeringTime - ci, ymax = FirstSteeringTime + ci), width = 0.1) +
+  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
+  ylim(0.37, 0.51) +
+  scale_linetype_manual(name = "Starting position (m)", values = c("dotted", "dashed", "solid")) +
+  xlab("Orientation (°)") +
+  ylab("Reaction time (s)") +
+  theme_plot +
+  theme(legend.position = c(0.70, 0.90), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 7), legend.text = element_text(size = 7)) +
+  ggsave('Fig9.2.tiff', plot = last_plot(), width = 5, height = 7, units = 'cm', dpi = 900, type = 'cairo')
+```
+
+## Figure 10 
+
+```{r}
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data")
+magnitudedata <- read.csv("magnitudedata.csv")
+
+magnitudedata <- magnitudedata %>%
+  dplyr::filter(EarlyResponses == FALSE)
+
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data/Sim_Data")
+accum_error_latency <- read.csv("accum_lpe_latency_exp2.csv", header = FALSE)
+threshold_error_latency <- read.csv("threshold_lpe_latency_exp2.csv", header = FALSE)
+
+"cleaning dataframes"
+accum_error_latency$V1 <- NULL
+accum_error_latency <- accum_error_latency[-c(1),]
+
+colnames(accum_error_latency) <- c("startingpos", "perceptual_var", "model", "heading", "LPE")
+
+threshold_error_latency$V1 <- NULL
+threshold_error_latency <- threshold_error_latency[-c(1),]
+
+colnames(threshold_error_latency) <- c("startingpos", "perceptual_var", "model", "heading", "LPE")
+
+"changing data types"
+accum_error_latency$LPE <- as.numeric(as.character(accum_error_latency$LPE))
+accum_error_latency$startingpos <- as.numeric(as.character(accum_error_latency$startingpos))
+accum_error_latency$heading <- as.numeric(as.character(accum_error_latency$heading))
+
+threshold_error_latency$LPE <- as.numeric(as.character(threshold_error_latency$LPE))
+threshold_error_latency$startingpos <- as.numeric(as.character(threshold_error_latency$startingpos))
+threshold_error_latency$heading <- as.numeric(as.character(threshold_error_latency$heading))
+
+sim_preds_error <- rbind(accum_error_latency, threshold_error_latency)
+
+"LPE predictions and data"
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
+ggplot(sim_preds_error %>%
+         dplyr::filter(perceptual_var == "visual_angle"), mapping = aes(x = heading, y = LPE, linetype = as.factor(startingpos), col = model)) +
+  geom_line() +
+  scale_linetype_manual(name = "Starting position (m)", labels = c("0", "4", "8"),  values = c("dotted", "dashed", "solid")) +
+  scale_colour_manual(name = "Framework", labels = c("Accumulator", "Threshold"), values = c("red", "blue")) +
+  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
+  ylab("Lateral position error (m)") +
+  ylim(0, 0.3) +
+  theme_plot +
+  theme(legend.position = c(0.85, 0.75), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 8), legend.text = element_text(size = 8)) +
+  facet_grid(~ model) +
+  ggsave('Fig10.1.tiff', plot = last_plot(), width = 10, height = 7, units = 'cm', dpi = 900, type = 'cairo')
+
+errorbar.lpe <- summarySE(magnitudedata, measurevar = "lane_position", groupvars = c("heading", "startingpos"))
+
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
+ggplot() +
+  geom_point(data = errorbar.lpe, mapping = aes(x = heading, y = lane_position)) +
+  geom_line(data = errorbar.lpe, mapping = aes(x = heading, linetype = as.factor(startingpos), group = as.factor(startingpos), y = lane_position)) +
+  geom_errorbar(data = errorbar.lpe, mapping = aes(x = heading, y = lane_position, ymin = lane_position - ci, ymax = lane_position + ci), width = 0.1) +
+  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
+  scale_linetype_manual(name = "Starting position (m)", values = c("dotted", "dashed", "solid")) +
+  xlab("Heading (°)") +
+  ylab("Lateral position error (m)") +
+  ylim(0, 0.6) +
+  theme_plot +
+  theme(legend.position = c(0.50, 0.80), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 8), legend.text = element_text(size = 8)) +
+  ggsave('Fig10.2.tiff', plot = last_plot(), width = 5, height = 7, units = 'cm', dpi = 900, type = 'cairo')
+```
+
+## Figure 11
+
+```{r}
+errorbar.swa <- summarySE(magnitudedata, measurevar = "peakSWA", groupvars = c("heading", "startingpos"))
+
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
+ggplot() +
+  geom_point(data = errorbar.swa, mapping = aes(x = heading, y = peakSWA)) +
+  geom_line(data = errorbar.swa, mapping = aes(x = heading, linetype = as.factor(startingpos), group = as.factor(startingpos), y = peakSWA)) +
+  geom_errorbar(data = errorbar.swa, mapping = aes(x = heading, y = peakSWA, ymin = peakSWA - ci, ymax = peakSWA + ci), width = 0.1) +
+  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
+  scale_linetype_manual(name = "Starting position (m)", values = c("dotted", "dashed", "solid")) +
+  xlab("Orientation (°)") +
+  ylab("Steering wheel angle (°)") +
+  theme_plot +
+  theme(legend.position = c(0.32, 0.90), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 9), legend.text = element_text(size = 9)) +
+  ggsave('Fig11.tiff', plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 300, type = 'cairo')
+```
+
+

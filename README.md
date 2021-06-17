@@ -1,0 +1,1 @@
+Data and analysis for "Steering is inititated based on error accumulation" manuscript. exp_1 script produces predictions for supplemental material whilst exp_2 script produces predictions for main experiment. Pre-processing and multilevel modelling are found in Experiment_2_analysis and Experiment_2_modelling respectively.  
