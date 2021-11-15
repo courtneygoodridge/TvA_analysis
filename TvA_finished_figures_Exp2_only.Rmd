@@ -32,6 +32,7 @@ library(viridisLite)
 library(patchwork)
 library(Rmisc)
 library(signal)
+library(stargazer)
 ```
 
 ## Theme plot
@@ -68,16 +69,16 @@ ggplot() +
   geom_segment(mapping = aes(x = 32, xend = 32, y = -Inf, yend = 3.2), colour = "purple", size = 0.2) +
   geom_point(response.dat, mapping = aes(x = time.response, y = error.response, shape = model), size = 1.5) +
   geom_hline(mapping = aes(yintercept = 3.7), linetype = "dashed") +
-  geom_label(aes(x = 0.3, y = 3.4, label = "Fixed threshold"), fontface = "bold", hjust = 0, vjust = 0.5, colour = "black", fill = "white", label.size = NA, family = "Arial", size = 2.6) +
+  geom_label(aes(x = 0, y = 3.4, label = "Fixed threshold"), fontface = "bold", hjust = 0, vjust = 0.5, colour = "black", fill = "white", label.size = NA, family = "Arial", size = 2.9) +
   scale_shape_manual(name = "Response mode", labels = c("Accumulator", "Threshold"), values = c(8, 1)) +
   scale_colour_manual(name = "\u0116", labels = c("Fast", "Slow"), values = c("green", "purple")) +
   ylab("Perceived control error E") +
   xlab("Time") +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 7)) + 
-  scale_x_continuous(expand = c(0, 0), limits = c(0, 40)) +
+  scale_x_continuous(expand = c(0, 0), limits = c(0, 39)) +
   theme_plot +
-  theme(legend.position = c(0.33, 0.83), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.05,0.05,0,0, unit = "cm"), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.y = element_text(size = 9), plot.title = element_text(size = 20, face = "bold"), axis.title.x = element_text(size = 9), axis.ticks.x = element_blank(), axis.text.x = element_blank(), title = element_text(size = 9), legend.title = element_text(size = 11, face = "bold"), legend.text = element_text(size = 9), axis.line.y = element_line(arrow = grid::arrow(length = unit(0.5, "cm"), ends = "last")), axis.line.x = element_line(arrow = grid::arrow(length = unit(0.5, "cm"), ends = "last"))) +
-  ggsave('Fig1.tiff', plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 300, type = 'cairo')
+  theme(legend.position = c(0.33, 0.83), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.05,0.05,0,0, unit = "cm"), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.y = element_text(size = 12), plot.title = element_text(size = 20, face = "bold"), axis.title.x = element_text(size = 12), axis.ticks.x = element_blank(), axis.text.x = element_blank(), title = element_text(size = 9), legend.title = element_text(size = 11, face = "bold"), legend.text = element_text(size = 11), axis.line.y = element_line(arrow = grid::arrow(length = unit(0.5, "cm"), ends = "last")), axis.line.x = element_line(arrow = grid::arrow(length = unit(0.5, "cm"), ends = "last"))) +
+  ggsave('Fig1.tiff', plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 ```
 
 ## Figure 3
@@ -102,7 +103,7 @@ ggplot() +
   geom_curve(experiment_2_coordinates %>%
                dplyr::filter(heading == 1, startingpos == 0) %>%
                dplyr::slice(1), mapping = aes(x = x, y = z, xend = z, yend = z + 2), col = "black", size = 0.5, curvature = 0, arrow = arrow(length = unit(0.04, "npc"))) +
-  annotate("text", x = 0.1, y = 0, size = 3, label = "T0") +
+  annotate("text", x = 0.1, y = 0, size = 4, label = "T0") +
   geom_point(experiment_2_coordinates %>%
                dplyr::filter(heading == 1, startingpos == 0) %>%
                dplyr::slice(55), mapping = aes(x = x * -1, y = z,  fill = as.factor(startingpos)), col = "black", shape = 21, size = 2) +
@@ -110,51 +111,54 @@ ggplot() +
   geom_curve(experiment_2_coordinates %>%
                dplyr::filter(heading == 1, startingpos == 0) %>%
                dplyr::slice(55), mapping = aes(x = x * -1, y = z, xend = x * -1, yend = z + 2), col = "black", size = 0.5, curvature = 0, arrow = arrow(length = unit(0.04, "npc"))) +
-  annotate("text", x = 0.19, y = 7.23, size = 3, label = "T1") +
+  annotate("text", x = 0.19, y = 7.23, size = 4, label = "T1") +
   geom_point(experiment_2_coordinates %>%
                dplyr::filter(heading == 2, startingpos == 4) %>%
                dplyr::slice(1), mapping = aes(x = x * -1, y = z,  fill = as.factor(startingpos)), col = "black", shape = 21, size = 2) +
   geom_curve(experiment_2_coordinates %>%
                dplyr::filter(heading == 2, startingpos == 4) %>%
                dplyr::slice(1), mapping = aes(x = x * -1, y = z, xend = x * -1, yend = z + 2), col = "black", size = 0.5, curvature = 0, arrow = arrow(length = unit(0.04, "npc"))) +
-   annotate("text", x = 0.22, y = 4, size = 3, label = "T0") +
+   annotate("text", x = 0.22, y = 4, size = 4, label = "T0") +
   geom_point(experiment_2_coordinates %>%
                dplyr::filter(heading == 2, startingpos == 4) %>%
                dplyr::slice(45), mapping = aes(x = x * -1, y = z,  fill = as.factor(startingpos)), col = "black", shape = 21, size = 2) +
   geom_curve(experiment_2_coordinates %>%
                dplyr::filter(heading == 2, startingpos == 4) %>%
                dplyr::slice(45), mapping = aes(x = x * -1, y = z, xend = x * -1, yend = z + 2), col = "black", size = 0.5, curvature = 0, arrow = arrow(length = unit(0.04, "npc"))) +
-  annotate("text", x = 0.43, y = 9.86, size = 3, label = "T1") +
+  annotate("text", x = 0.43, y = 9.86, size = 4, label = "T1") +
   geom_point(experiment_2_coordinates %>%
                dplyr::filter(heading == 2, startingpos == 8) %>%
                dplyr::slice(1), mapping = aes(x = x, y = z,  fill = as.factor(startingpos)), col = "black", shape = 21, size = 2) +
   geom_curve(experiment_2_coordinates %>%
                dplyr::filter(heading == 2, startingpos == 8) %>%
                dplyr::slice(1), mapping = aes(x = x, y = z, xend = x, yend = z + 2), col = "black", size = 0.5, curvature = 0, arrow = arrow(length = unit(0.04, "npc"))) +
-  annotate("text", x = -0.38, y = 8, size = 3, label = "T0") +
+  annotate("text", x = -0.38, y = 8, size = 4, label = "T0") +
   geom_point(experiment_2_coordinates %>%
                dplyr::filter(heading == 2, startingpos == 8) %>%
                dplyr::slice(45), mapping = aes(x = x, y = z,  fill = as.factor(startingpos)), col = "black", shape = 21, size = 2) +
   geom_curve(experiment_2_coordinates %>%
                dplyr::filter(heading == 2, startingpos == 8) %>%
                dplyr::slice(45), mapping = aes(x = x, y = z, xend = x, yend = z + 2), col = "black", size = 0.5, curvature = 0, arrow = arrow(length = unit(0.04, "npc"))) +
-  annotate("text", x = -0.58, y = 13.85, size = 3, label = "T1") +
-  scale_fill_manual(name = " Starting position (m)", values = c("black", "darkgrey", "white"), labels = c("0", "4", "8")) +
+  annotate("text", x = -0.58, y = 13.85, size = 4, label = "T1") +
+  scale_fill_manual(name = " Starting position (m)", values = c("black", "darkgrey", "white"), labels = c("0", "4", "8"), guide = guide_legend(reverse = TRUE)) +
   geom_vline(mapping = aes(xintercept = 0), size = 1, alpha = 0.7) +
-  annotate("text", x = -0.66, y = 20.5, size = 3, label = "-2.0°") +
-  annotate("text", x = -0.33, y = 20.5, size = 3, label = "-1.0°") +
+  annotate("text", x = -0.66, y = 20.5, size = 4, label = "-2.0°") +
+  annotate("text", x = -0.33, y = 20.5, size = 4, label = "-1.0°") +
   geom_curve(aes(x = -0.43, y = 14.85597, xend = -0.43, yend = 13.85597), colour = "black", size = 0.5, curvature = 0) +
   geom_curve(aes(x = -0.03, y = 14.85597, xend = -0.03, yend = 13.85597), colour = "black", size = 0.5, curvature = 0) +
   geom_curve(aes(x = -0.43, y = 14.85597, xend = -0.03, yend = 14.85597), colour = "black", size = 0.5, curvature = 0) +
   geom_curve(aes(x = -0.23, y = 15.85597, xend = -0.23, yend = 14.85597), colour = "black", size = 0.5, curvature = 0) +
-  annotate("text", x = -0.18, y = 16.5, size = 3, label = "LPE") +
+  annotate("text", x = -0.18, y = 17, size = 4, label = "LPE") +
   ylab("z (m)") +
   xlab("x (m)") +
   ylim(0, 21) +
-  xlim(-0.7, 0.7) +
+  xlim(-0.9, 0.9) +
   theme_plot +
-  theme(legend.position = c(0.20, 0.14), legend.key.height = unit(0, 'cm'), legend.key.width = unit(0.5, 'cm'), legend.key = element_blank(), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.05,0.05,0,0, unit = "cm"), legend.key.size = unit(0, 'cm'), plot.title = element_text(size = 19, face = "bold"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 6.5), legend.text = element_text(size = 8)) +
-  ggsave('Fig3.tiff', plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 300, type = 'cairo')
+  theme(legend.position = c(0.20, 0.20), legend.key.height = unit(0, 'cm'), legend.key.width = unit(0.5, 'cm'), legend.key = element_blank(), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.05,0.05,0,0, unit = "cm"), legend.key.size = unit(0, 'cm'), plot.title = element_text(size = 19, face = "bold"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) +
+  ggsave('Fig3.tiff', plot = last_plot(), width = 12, height = 7, units = 'cm', dpi = 600, type = 'cairo')
+
+
+  theme(legend.position = c(0.55, 0.75), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
 ```
 
 ## Figure 4
@@ -220,8 +224,8 @@ ggplot() +
   xlab("Time") +
   ylab("Perceived control error E") +
   theme_plot +
-  theme(legend.position = c(0.33, 0.83), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.05,0.05,0,0, unit = "cm"), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.y = element_text(size = 9), plot.title = element_text(size = 20, face = "bold"), axis.title.x = element_text(size = 9), axis.ticks.x = element_blank(), axis.text.x = element_blank(), title = element_text(size = 9), legend.title = element_text(size = 11, face = "bold"), legend.text = element_text(size = 9), axis.line.y = element_line(arrow = grid::arrow(length = unit(0.5, "cm"), ends = "last")), axis.line.x = element_line(arrow = grid::arrow(length = unit(0.5, "cm"), ends = "last"))) +
-  ggsave('Fig4.tiff', plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 300, type = 'cairo')
+  theme(legend.position = c(0.33, 0.80), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.05,0.05,0,0, unit = "cm"), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.y = element_text(size = 12), plot.title = element_text(size = 20, face = "bold"), axis.title.x = element_text(size = 12), axis.ticks.x = element_blank(), axis.text.x = element_blank(), title = element_text(size = 9), legend.title = element_text(size = 11, face = "bold"), legend.text = element_text(size = 11), axis.line.y = element_line(arrow = grid::arrow(length = unit(0.5, "cm"), ends = "last")), axis.line.x = element_line(arrow = grid::arrow(length = unit(0.5, "cm"), ends = "last"))) +
+  ggsave('Fig4.tiff', plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 ```
 
 ## Figure 5
@@ -252,31 +256,67 @@ threshold_response_latency$rt <- as.numeric(as.character(threshold_response_late
 threshold_response_latency$startingpos <- as.numeric(as.character(threshold_response_latency$startingpos))
 threshold_response_latency$heading <- as.numeric(as.character(threshold_response_latency$heading))
 
-threshold_response_latency <- threshold_response_latency %>%
-  dplyr::mutate(rt = rt / 3)
+sim_preds_response <- rbind(accum_response_latency, threshold_response_latency)
 
-sim_preds_response <- rbind(accum_response_latency, threshold_response_latency) 
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data")
+magnitudedata <- read.csv("magnitudedata.csv")
 
+magnitudedata <- magnitudedata %>%
+  dplyr::filter(EarlyResponses == FALSE)
 
-"RT predictionsfor experiment 2"
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
-ggplot(sim_preds_response %>%
-         dplyr::filter(perceptual_var == "visual_angle"), mapping = aes(x = heading, y = rt, linetype = as.factor(startingpos), col = model)) +
+"RT predictions and data"
+acc.plot <- ggplot(sim_preds_response %>%
+         dplyr::filter(perceptual_var == "visual_angle", model == "accumulator"), mapping = aes(x = heading, y = rt, linetype = as.factor(startingpos))) +
   geom_line() +
   scale_linetype_manual(name = "Starting position (m)", labels = c("0", "4", "8"),  values = c("dotted", "dashed", "solid")) +
-  scale_colour_manual(name = "Framework", labels = c("Accumulator", "Threshold"), values = c("red", "blue")) +
   scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
   ylab("Reaction time (s)") +
-  ylim(0, 1.3) +
+  ggtitle("A: Accumulator") +
+  ylim(0, 2) +
   theme_plot +
-  theme(legend.position = c(0.66, 0.78), legend.key.height = unit(0, 'cm'), legend.margin = margin(0,0,0,0, unit = "cm"), legend.key.width = unit(0.5, 'cm'), legend.key = element_blank(), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 9), legend.text = element_text(size = 9)) +
-  facet_grid(~ model) +
-  ggsave('Fig5.tiff', plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 300,  type = 'cairo')
+  theme(legend.position = c(0.55, 0.75), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
+
+thresh.plot <- ggplot(sim_preds_response %>%
+         dplyr::filter(perceptual_var == "visual_angle", model == "threshold"), mapping = aes(x = heading, y = rt, linetype = as.factor(startingpos))) +
+  geom_line() +
+  scale_linetype_manual(name = "Starting position (m)", labels = c("0", "4", "8"),  values = c("dotted", "dashed", "solid")) +
+  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
+  ylab("Reaction time (s)") +
+  ylim(0, 2) +
+  ggtitle("B: Threshold") +
+  theme_plot +
+  theme(legend.position = "none", legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
+
+errorbar.rt <- summarySE(magnitudedata, measurevar = "FirstSteeringTime", groupvars = c("heading", "startingpos"))
+
+data.plot <- ggplot() +
+  geom_point(data = errorbar.rt, mapping = aes(x = heading, y = FirstSteeringTime)) +
+  geom_line(data = errorbar.rt, mapping = aes(x = heading, linetype = as.factor(startingpos), group = as.factor(startingpos), y = FirstSteeringTime)) +
+  geom_errorbar(data = errorbar.rt, mapping = aes(x = heading, y = FirstSteeringTime, ymin = FirstSteeringTime - ci, ymax = FirstSteeringTime + ci), width = 0.1) +
+  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
+  ylim(0.37, 0.55) +
+  scale_linetype_manual(name = "Starting position (m)", values = c("dotted", "dashed", "solid")) +
+  ggtitle("C: Data") +
+  xlab("Orientation (°)") +
+  ylab("Reaction time (s)") +
+  theme_plot +
+  theme(legend.position = "none", legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
+
+
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
+g <- arrangeGrob(acc.plot, thresh.plot, data.plot, nrow = 1)
+  ggsave('Fig5.tiff', g,  width = 15, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 ```
 
 ## Figure 6
 
 ```{r}
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data")
+magnitudedata <- read.csv("magnitudedata.csv")
+
+magnitudedata <- magnitudedata %>%
+  dplyr::filter(EarlyResponses == FALSE)
+
 setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data/Sim_Data")
 accum_error_latency <- read.csv("accum_lpe_latency_exp2.csv", header = FALSE)
 threshold_error_latency <- read.csv("threshold_lpe_latency_exp2.csv", header = FALSE)
@@ -301,31 +341,107 @@ threshold_error_latency$LPE <- as.numeric(as.character(threshold_error_latency$L
 threshold_error_latency$startingpos <- as.numeric(as.character(threshold_error_latency$startingpos))
 threshold_error_latency$heading <- as.numeric(as.character(threshold_error_latency$heading))
 
-"scaling factor"
-threshold_error_latency <- threshold_error_latency %>%
-  dplyr::mutate(LPE = case_when(startingpos == 8 ~ LPE,
-                                    startingpos == 4 ~ LPE + 0.016,
-                                    startingpos == 0 ~ LPE + 0.016)) 
-
 sim_preds_error <- rbind(accum_error_latency, threshold_error_latency)
 
-"LPE predictions"
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
-ggplot(sim_preds_error %>%
-         dplyr::filter(perceptual_var == "visual_angle"), mapping = aes(x = heading, y = LPE, linetype = as.factor(startingpos), col = model)) +
+"LPE predictions and data"
+acc.plot <- ggplot(sim_preds_error %>%
+         dplyr::filter(perceptual_var == "visual_angle", model == "accumulator"), mapping = aes(x = heading, y = LPE, linetype = as.factor(startingpos))) +
   geom_line() +
-  scale_linetype_manual(name = "Starting position (m)", labels = c("0", "4", "8"),  values = c("dotted", "dashed", "solid")) +
-  scale_colour_manual(name = "Framework", labels = c("Accumulator", "Threshold"), values = c("red", "blue")) +
+  scale_linetype_manual(name = "Starting position (m)", labels = c("0", "4", "8"),  values = c("dotted", "dashed", "solid"), guide = guide_legend(reverse = TRUE)) +
   scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
   ylab("Lateral position error (m)") +
+  ggtitle("A: Accumulator") +
   ylim(0, 0.3) +
   theme_plot +
-  theme(legend.position = c(0.75, 0.75), legend.key.height = unit(0, 'cm'), legend.key.width = unit(0.5, 'cm'), legend.key = element_blank(), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 9), legend.text = element_text(size = 9)) +
-  facet_grid(~ model) +
-  ggsave('Fig6.tiff', plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 300,  type = 'cairo')
+  theme(legend.position = c(0.55, 0.75), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
+
+thresh.plot <- ggplot(sim_preds_error %>%
+         dplyr::filter(perceptual_var == "visual_angle", model == "threshold"), mapping = aes(x = heading, y = LPE, linetype = as.factor(startingpos))) +
+  geom_line() +
+  scale_linetype_manual(name = "Starting position (m)", labels = c("0", "4", "8"),  values = c("dotted", "dashed", "solid"), guide = guide_legend(reverse = TRUE)) +
+  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
+  ylab("Lateral position error (m)") +
+  ggtitle("B: Threshold") +
+  ylim(0, 0.3) +
+  theme_plot +
+  theme(legend.position = "none", legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
+  
+errorbar.lpe <- summarySE(magnitudedata, measurevar = "lane_position", groupvars = c("heading", "startingpos"))
+
+data.plot <- ggplot() +
+  geom_point(data = errorbar.lpe, mapping = aes(x = heading, y = lane_position)) +
+  geom_line(data = errorbar.lpe, mapping = aes(x = heading, linetype = as.factor(startingpos), group = as.factor(startingpos), y = lane_position)) +
+  geom_errorbar(data = errorbar.lpe, mapping = aes(x = heading, y = lane_position, ymin = lane_position - ci, ymax = lane_position + ci), width = 0.1) +
+  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
+  scale_linetype_manual(name = "Starting position (m)", values = c("dotted", "dashed", "solid"), guide = guide_legend(reverse = TRUE)) +
+  ylab("Lateral position error (m)") +
+  ggtitle("C: Data") +
+  ylim(0, 0.6) +
+  theme_plot +
+  theme(legend.position = "none", legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
+
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
+g <- arrangeGrob(acc.plot, thresh.plot, data.plot, nrow = 1)
+  ggsave('Fig6.tiff', g,  width = 15, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 ```
 
 ## Figure 7
+
+```{r}
+sim_preds_error_swa <- sim_preds_error %>%
+  dplyr::mutate(SWA = LPE) %>%
+  dplyr::mutate(SWA = case_when(model == "threshold" & startingpos == 0 ~ 0.03694289 + 0.05,
+                                model == "threshold" & startingpos == 4 ~ 0.03794289 + 0.05,
+                                model == "threshold" & startingpos == 8 ~ 0.03955879 + 0.05,
+                                model == "accumulator" & startingpos == 0 ~ SWA,
+                                model == "accumulator" & startingpos == 4 ~ SWA,
+                                model == "accumulator" & startingpos == 8 ~ SWA)) %>%
+  dplyr::mutate(SWA = SWA * 50)
+
+acc.plot <- ggplot(sim_preds_error_swa %>%
+         dplyr::filter(perceptual_var == "visual_angle", model == "accumulator"), mapping = aes(x = heading, y = SWA, linetype = as.factor(startingpos))) +
+  geom_line() +
+  scale_linetype_manual(name = "Starting position (m)", labels = c("0", "4", "8"),  values = c("dotted", "dashed", "solid"), guide = guide_legend(reverse = TRUE)) +
+  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
+  ylab("Steering wheel angle (°)") +
+  ggtitle("A: Accumulator") +
+  ylim(0, 16) +
+  facet_wrap(~model) +
+  theme_plot +
+  theme(legend.position = c(0.55, 0.75), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
+
+thresh.plot <- ggplot(sim_preds_error_swa %>%
+         dplyr::filter(perceptual_var == "visual_angle", model == "threshold"), mapping = aes(x = heading, y = SWA, linetype = as.factor(startingpos))) +
+  geom_line() +
+  scale_linetype_manual(name = "Starting position (m)", labels = c("0", "4", "8"),  values = c("dotted", "dashed", "solid"), guide = guide_legend(reverse = TRUE)) +
+  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
+  ylab("Steering wheel angle (°)") +
+  ggtitle("B: Threshold") +
+  ylim(0, 16) +
+  facet_wrap(~model) +
+  theme_plot +
+  theme(legend.position = "none", legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
+
+errorbar.swa <- summarySE(magnitudedata, measurevar = "peakSWA", groupvars = c("heading", "startingpos"))
+
+data.plot <- ggplot() +
+  geom_point(data = errorbar.swa, mapping = aes(x = heading, y = peakSWA)) +
+  geom_line(data = errorbar.swa, mapping = aes(x = heading, linetype = as.factor(startingpos), group = as.factor(startingpos), y = peakSWA)) +
+  geom_errorbar(data = errorbar.swa, mapping = aes(x = heading, y = peakSWA, ymin = peakSWA - ci, ymax = peakSWA + ci), width = 0.1) +
+  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
+  scale_linetype_manual(name = "Starting position (m)", values = c("dotted", "dashed", "solid"), guide = guide_legend(reverse = TRUE)) +
+  xlab("Orientation (°)") +
+  ylab("Steering wheel angle (°)") +
+  ggtitle("C: Data") +
+  theme_plot +
+  theme(legend.position = "none", legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
+
+setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
+g <- arrangeGrob(acc.plot, thresh.plot, data.plot, nrow = 1)
+  ggsave('Fig7.tiff', g,  width = 15, height = 7, units = 'cm', dpi = 600, type = 'cairo')
+```
+
+## Figure 8
 
 ```{r}
 setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Full_Data") 
@@ -423,13 +539,13 @@ swa.plot <- ggplot() +
   geom_line(plot.steering.dat, mapping = aes(x = timestamp, y = SWA)) +
   geom_point(magnitudedata %>%
                dplyr::filter(ppid_trialn == "14_2_32"), mapping = aes(x = PeakSteeringTime, y = peakSWA)) +
-  scale_x_continuous(limits = c(0, 2.5), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(0, 2.6), expand = c(0, 0)) +
   scale_y_continuous(limits = c(-7, 14), expand = c(0, 0)) +
   ggtitle("B") +
   ylab("Steering wheel angle (°)") +
   xlab("Time (s)") +
   theme_plot +
-  theme(legend.position = c(0.85, 0.90), legend.key.height = unit(0, 'cm'), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 7), legend.text = element_text(size = 7)) 
+  theme(legend.position = c(0.55, 0.75), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
 
 sr.plot <- ggplot(data = plot.steering.dat) +
   geom_line(aes(x = timestamp, y = diff_SWA), alpha = 0.4, colour = "red") +
@@ -437,20 +553,23 @@ sr.plot <- ggplot(data = plot.steering.dat) +
   geom_segment(aes(x = FirstSteeringTime - 0.1, xend = FirstSteeringTime + 0.1, y = 0.06, yend = 0.06), colour = "black", size = 0.5, alpha = 0.4) +
   geom_segment(aes(x = FirstSteeringTime - 0.1, xend = FirstSteeringTime + 0.1, y = 0.02, yend = 0.02), colour = "black", size = 0.5, alpha = 0.4) +
   geom_vline(aes(xintercept = FirstSteeringTime)) +
-  theme_plot +
-  theme(legend.position = c(0.85, 0.90), legend.key.height = unit(0, 'cm'), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 7), legend.text = element_text(size = 7)) +
   ggtitle("A") +
   ylab("Steering rate (°/s)") +
   xlab("Time (s)") +
-  scale_x_continuous(limits = c(0, 2.5), expand = c(0, 0)) +
-  scale_y_continuous(limits = c(-1, 1.2), expand = c(0, 0)) 
+  scale_x_continuous(limits = c(0, 2.6), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(-1, 1.2), expand = c(0, 0)) +
+  theme_plot +
+  theme(legend.position = c(0.55, 0.75), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
 
 setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
 g <- arrangeGrob(sr.plot, swa.plot, nrow = 1)
-ggsave('Fig7.tiff', g,  width = 15, height = 7, units = 'cm', dpi = 300, type = 'cairo')
-```
+ggsave('Fig8.tiff', g,  width = 15, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 
-## Figure 8
+
+
+  theme(legend.position = c(0.55, 0.75), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
+```
+## Figure 9
 
 ```{r}
 setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data") 
@@ -600,7 +719,7 @@ ggplot() +
               dplyr::mutate(z = case_when(startingpos == 0 ~ z,
                                           startingpos == 4 ~ z,
                                           startingpos == 8 ~ z)), mapping = aes(x = x, y = z, linetype = as.factor(startingpos), alpha = as.factor(startingpos), col = as.factor(heading))) +
-  scale_colour_manual(name = "Orientation (°)", labels = c("1", "2"), values = c(my_cols)) +
+  scale_colour_manual(name = "Orientation (°)", labels = c("1", "2"), values = c("black", "#F2300F")) +
   scale_linetype_manual(name = "Starting position (m)", values = c("dotted", "dashed", "solid")) +
   scale_alpha_manual(name = "Starting position (m)", values = c(0.35, 0.65, 1), guide = FALSE) +
   geom_point(true_responses %>%
@@ -614,167 +733,56 @@ ggplot() +
   xlab("x (m)") +
   ylab("z (m)") +
   ylim(0, 30) +
-  xlim(-0.65, 0) +
+  xlim(-0.80, 0) +
   scale_y_continuous(expand = c(0, 0)) +
   theme_plot +
-  theme(legend.position = c(0.25, 0.24), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.1,0.1,0,0, unit = "cm"), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 8), legend.text = element_text(size = 8)) +
-  ggsave('Fig8.tiff', plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 300, type = 'cairo')
+  theme(legend.position = c(0.25, 0.30), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.1,0.1,0,0, unit = "cm"), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) +
+  ggsave('Fig9.tiff', plot = last_plot(), width = 10, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 ```
 
-## Figure 9
-
-## Figure 13
+## Table for random effects 
 
 ```{r}
-"load in model predictions"
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data/Sim_Data")
-accum_response_latency <- read.csv("accum_rt_latency_exp2.csv", header = FALSE)
-threshold_response_latency <- read.csv("threshold_rt_latency_exp2.csv", header = FALSE)
+fit.gamma.rt <- glmer(FirstSteeringTime ~ heading_zero * startingpos + (heading_zero + startingpos | pNum),
+                      nAGQ = 0,
+                      family = Gamma(link = "identity"),
+                      data = magnitudedata)
 
-"cleaning dataframes"
-accum_response_latency$V1 <- NULL
-accum_response_latency <- accum_response_latency[-c(1),]
+fit.gaus.lpe <- lmerTest::lmer(lane_position ~ heading_zero * startingpos + (heading_zero + startingpos | pNum),
+                               data = magnitudedata)
 
-colnames(accum_response_latency) <- c("startingpos", "perceptual_var", "model", "heading", "rt")
+fit.gamma.swa <- glmer(peakSWA ~ heading_zero * startingpos + (heading_zero + startingpos | pNum),
+                       nAGQ = 0,
+                       family = Gamma(link = "identity"),
+                       data = magnitudedata)
 
-threshold_response_latency$V1 <- NULL
-threshold_response_latency <- threshold_response_latency[-c(1),]
 
-colnames(threshold_response_latency) <- c("startingpos", "perceptual_var", "model", "heading", "rt")
+mod_stats <- tribble(~stat, ~fit.gamma.rt, ~fit.gaus.lpe, ~fit.gamma.swa,
+                     "sd(participants)", round(as.data.frame(VarCorr(fit.gamma.rt))[1,5], 5), round(as.data.frame(VarCorr(fit.gaus.lpe))[1,5], 5), round(as.data.frame(VarCorr(fit.gamma.swa))[1,5], 5),
+                     "sd(heading", round(as.data.frame(VarCorr(fit.gamma.rt))[2,5], 5), round(as.data.frame(VarCorr(fit.gaus.lpe))[2,5], 5), round(as.data.frame(VarCorr(fit.gamma.swa))[2,5], 5),
+                     "sd(startingpos)", round(as.data.frame(VarCorr(fit.gamma.rt))[3,5], 5), round(as.data.frame(VarCorr(fit.gaus.lpe))[3, 5], 5), round(as.data.frame(VarCorr(fit.gamma.swa))[3,5], 5),
+                     "sd(resid)", round(as.data.frame(VarCorr(fit.gamma.rt))[7,5], 5), round(as.data.frame(VarCorr(fit.gaus.lpe))[7,5], 5),
+                     round(as.data.frame(VarCorr(fit.gamma.swa))[7,5], 5))
 
-"changing data types"
-accum_response_latency$rt <- as.numeric(as.character(accum_response_latency$rt))
-accum_response_latency$startingpos <- as.numeric(as.character(accum_response_latency$startingpos))
-accum_response_latency$heading <- as.numeric(as.character(accum_response_latency$heading))
-
-threshold_response_latency$rt <- as.numeric(as.character(threshold_response_latency$rt))
-threshold_response_latency$startingpos <- as.numeric(as.character(threshold_response_latency$startingpos))
-threshold_response_latency$heading <- as.numeric(as.character(threshold_response_latency$heading))
-
-sim_preds_response <- rbind(accum_response_latency, threshold_response_latency)
-
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data")
-magnitudedata <- read.csv("magnitudedata.csv")
-
-magnitudedata <- magnitudedata %>%
-  dplyr::filter(EarlyResponses == FALSE)
-
-"RT predictions and data"
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
-ggplot(sim_preds_response %>%
-         dplyr::filter(perceptual_var == "visual_angle"), mapping = aes(x = heading, y = rt, linetype = as.factor(startingpos), col = model)) +
-  geom_line() +
-  scale_linetype_manual(name = "Starting position (m)", labels = c("0", "4", "8"),  values = c("dotted", "dashed", "solid")) +
-  scale_colour_manual(name = "Framework", labels = c("Accumulator", "Threshold"), values = c("red", "blue")) +
-  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
-  ylab("Reaction time (s)") +
-  ylim(0, 1.2) +
-  theme_plot +
-  theme(legend.position = c(0.85, 0.75), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 7.5), legend.text = element_text(size = 7.5)) +
-  facet_grid(~ model) +
-  ggsave('Fig9.1.tiff', plot = last_plot(), width = 10, height = 7, units = 'cm', dpi = 900, type = 'cairo')
-
-errorbar.rt <- summarySE(magnitudedata, measurevar = "FirstSteeringTime", groupvars = c("heading", "startingpos"))
+summary(null)
 
 setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
-ggplot() +
-  geom_point(data = errorbar.rt, mapping = aes(x = heading, y = FirstSteeringTime)) +
-  geom_line(data = errorbar.rt, mapping = aes(x = heading, linetype = as.factor(startingpos), group = as.factor(startingpos), y = FirstSteeringTime)) +
-  geom_errorbar(data = errorbar.rt, mapping = aes(x = heading, y = FirstSteeringTime, ymin = FirstSteeringTime - ci, ymax = FirstSteeringTime + ci), width = 0.1) +
-  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
-  ylim(0.37, 0.51) +
-  scale_linetype_manual(name = "Starting position (m)", values = c("dotted", "dashed", "solid")) +
-  xlab("Orientation (°)") +
-  ylab("Reaction time (s)") +
-  theme_plot +
-  theme(legend.position = c(0.70, 0.90), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 7), legend.text = element_text(size = 7)) +
-  ggsave('Fig9.2.tiff', plot = last_plot(), width = 5, height = 7, units = 'cm', dpi = 900, type = 'cairo')
-```
-
-## Figure 10 
-
-```{r}
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data")
-magnitudedata <- read.csv("magnitudedata.csv")
-
-magnitudedata <- magnitudedata %>%
-  dplyr::filter(EarlyResponses == FALSE)
-
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data/Sim_Data")
-accum_error_latency <- read.csv("accum_lpe_latency_exp2.csv", header = FALSE)
-threshold_error_latency <- read.csv("threshold_lpe_latency_exp2.csv", header = FALSE)
-
-"cleaning dataframes"
-accum_error_latency$V1 <- NULL
-accum_error_latency <- accum_error_latency[-c(1),]
-
-colnames(accum_error_latency) <- c("startingpos", "perceptual_var", "model", "heading", "LPE")
-
-threshold_error_latency$V1 <- NULL
-threshold_error_latency <- threshold_error_latency[-c(1),]
-
-colnames(threshold_error_latency) <- c("startingpos", "perceptual_var", "model", "heading", "LPE")
-
-"changing data types"
-accum_error_latency$LPE <- as.numeric(as.character(accum_error_latency$LPE))
-accum_error_latency$startingpos <- as.numeric(as.character(accum_error_latency$startingpos))
-accum_error_latency$heading <- as.numeric(as.character(accum_error_latency$heading))
-
-threshold_error_latency$LPE <- as.numeric(as.character(threshold_error_latency$LPE))
-threshold_error_latency$startingpos <- as.numeric(as.character(threshold_error_latency$startingpos))
-threshold_error_latency$heading <- as.numeric(as.character(threshold_error_latency$heading))
-
-sim_preds_error <- rbind(accum_error_latency, threshold_error_latency)
-
-"LPE predictions and data"
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
-ggplot(sim_preds_error %>%
-         dplyr::filter(perceptual_var == "visual_angle"), mapping = aes(x = heading, y = LPE, linetype = as.factor(startingpos), col = model)) +
-  geom_line() +
-  scale_linetype_manual(name = "Starting position (m)", labels = c("0", "4", "8"),  values = c("dotted", "dashed", "solid")) +
-  scale_colour_manual(name = "Framework", labels = c("Accumulator", "Threshold"), values = c("red", "blue")) +
-  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
-  ylab("Lateral position error (m)") +
-  ylim(0, 0.3) +
-  theme_plot +
-  theme(legend.position = c(0.85, 0.75), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 8), legend.text = element_text(size = 8)) +
-  facet_grid(~ model) +
-  ggsave('Fig10.1.tiff', plot = last_plot(), width = 10, height = 7, units = 'cm', dpi = 900, type = 'cairo')
-
-errorbar.lpe <- summarySE(magnitudedata, measurevar = "lane_position", groupvars = c("heading", "startingpos"))
-
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
-ggplot() +
-  geom_point(data = errorbar.lpe, mapping = aes(x = heading, y = lane_position)) +
-  geom_line(data = errorbar.lpe, mapping = aes(x = heading, linetype = as.factor(startingpos), group = as.factor(startingpos), y = lane_position)) +
-  geom_errorbar(data = errorbar.lpe, mapping = aes(x = heading, y = lane_position, ymin = lane_position - ci, ymax = lane_position + ci), width = 0.1) +
-  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
-  scale_linetype_manual(name = "Starting position (m)", values = c("dotted", "dashed", "solid")) +
-  xlab("Heading (°)") +
-  ylab("Lateral position error (m)") +
-  ylim(0, 0.6) +
-  theme_plot +
-  theme(legend.position = c(0.50, 0.80), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 8), legend.text = element_text(size = 8)) +
-  ggsave('Fig10.2.tiff', plot = last_plot(), width = 5, height = 7, units = 'cm', dpi = 900, type = 'cairo')
-```
-
-## Figure 11
-
-```{r}
-errorbar.swa <- summarySE(magnitudedata, measurevar = "peakSWA", groupvars = c("heading", "startingpos"))
-
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
-ggplot() +
-  geom_point(data = errorbar.swa, mapping = aes(x = heading, y = peakSWA)) +
-  geom_line(data = errorbar.swa, mapping = aes(x = heading, linetype = as.factor(startingpos), group = as.factor(startingpos), y = peakSWA)) +
-  geom_errorbar(data = errorbar.swa, mapping = aes(x = heading, y = peakSWA, ymin = peakSWA - ci, ymax = peakSWA + ci), width = 0.1) +
-  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
-  scale_linetype_manual(name = "Starting position (m)", values = c("dotted", "dashed", "solid")) +
-  xlab("Orientation (°)") +
-  ylab("Steering wheel angle (°)") +
-  theme_plot +
-  theme(legend.position = c(0.32, 0.90), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), axis.title.y = element_text(size = 9), axis.text.y = element_text(size = 9), title = element_text(size = 7), legend.title = element_text(size = 9), legend.text = element_text(size = 9)) +
-  ggsave('Fig11.tiff', plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 300, type = 'cairo')
+stargazer(fit.gamma.swa, fit.gamma.swa, fit.gamma.swa, type = "text", 
+          coef = list(c(mod_stats$fit.gamma.rt),
+                      c(mod_stats$fit.gaus.lpe),
+                      c(mod_stats$fit.gamma.swa)),
+          order = c("Constant"),
+          column.labels = c("Reaction time model", "Lateral position error model", "Steering wheel angle model"),
+          omit.table.layout = "s",
+          dep.var.labels = NULL,
+          notes = "Participants: 20, Observations: 6163",
+          model.names = FALSE,
+          title = "Random effects",
+          out = "random.effects.exp2.html"
+          )
 ```
 
 
+
+
+```
