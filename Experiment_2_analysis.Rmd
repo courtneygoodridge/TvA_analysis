@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-#### TvA analysis script
+#### TvA analysis script - pre-processing analysis
 
 This script loads in individual participant data and produces RtS, lateral position errors from the road-line, and steering rate values for each condition.
 

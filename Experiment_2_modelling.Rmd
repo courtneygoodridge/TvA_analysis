@@ -9,17 +9,13 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-#### Experiment 2 modelling - assessing assumptions
+#### TvA analysis script - statisical modelling
 
-First section of this modeling aims to do the following:
-
-- test for differences between left and right turns to justify collapsing them
-- assess distributions at the condition level and the subject level
+This script takes the magnitudedata dataset from the Experiment_2_analysis.Rmd file, and conducts a range of modelling. First I assess the diistribution at the condition and participant level, before fitting the models.
 
 ## Load packages
 
 ```{r}
-# rm(list = ls()) # clear work space
 library(effsize)
 library(sjstats) # calculates effect size for ANOVA
 library(car) # performs ANOVA
@@ -50,8 +46,8 @@ library(effsize)
 ## Load data
 
 ```{r}
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data")
-magnitudedata <- read.csv("magnitudedata.csv")
+magnitudedata <- read.csv(here::here("TvA_analysis/Data/Processed/magnitudedata.csv"))
+
 
 magnitudedata <- magnitudedata %>%
   dplyr::filter(EarlyResponses == FALSE)
