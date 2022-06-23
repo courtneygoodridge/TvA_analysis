@@ -9,20 +9,15 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-#### Experiment 2 analysis - cleaning data 
+#### TvA analysis script
 
-The first section of the analysis aims to do the following:
+This script loads in individual participant data and produces RtS, lateral position errors from the road-line, and steering rate values for each condition.
 
-- select the appropriate data we want to analyse
-- mirror steering responses 
-- process steering metrics at onset and peak
-- save these metrics for each valid trials into final dataframe
+Final dataframe is saved ready for multilevel modelling analysis in "Experiment_2_modelling.Rmd.
 
 ## Load libraries
 
 ```{r}
-# rm(list = ls())
-"load packages"
 library(ggplot2) # for plots
 library(dplyr) # for manipulating data frames
 library(tidyr) # for tidying data (uniting columns)
@@ -40,16 +35,17 @@ library(pracma) # peak finding function
 library(wesanderson) # Wes Anderson colour palette
 library(splitstackshape) # adding ID column
 library(wesanderson) # colour palettes for plotting
-library(Rmisc)
+library(Rmisc)# misc functions for analysis
+library(here) # guides working directory
+library(data.table) #load data
+library(readr) # load data
 ```
 
 # Load raw data
 
 ```{r}
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data") 
-temp = list.files(pattern = c("BenLui17_EXP2_")) # list all CSV files in the directory
-myfiles = lapply(temp, read.csv) # read these CSV in the directory
-workingdata <- do.call(rbind.data.frame, myfiles) # convert and combine the CSV files into dataframe
+myfiles = list.files(path = here::here("TvA_analysis/Data/Raw"), pattern = "*.csv", full.names = TRUE)
+workingdata  <- ldply(myfiles, read_csv)
 ```
 
 ## Demographic information
@@ -69,14 +65,10 @@ gender <- workingdata %>%
   dplyr::summarise(count = n()) %>%
   dplyr::ungroup()
 
-print("female")
-length(dplyr::filter(gender, gender == 1)) 
-
-print("male")
-length(dplyr::filter(gender, gender == 2))
-
-length(female$gender) / length(gender$gender) * 100 
-length(male$gender) / length(gender$gender) * 100
+# 1 = female, 2 = male
+gender %>%
+  dplyr::group_by(gender) %>%
+  dplyr::summarise(n = n())
 ```
 
 ## Processing timecourse
