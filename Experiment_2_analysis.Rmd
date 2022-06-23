@@ -83,11 +83,9 @@ lowerthreshold <-  0.02 # lower threshold for when response is initiated
 
 "1) timecourse from when line is visible and 2) mirroring steering metrics"
 linevisibletimecoursedata <- workingdata %>%
-  dplyr::mutate(StraightVisible = case_when(StraightVisible == "False" ~ 1,
-                                            StraightVisible == "True" ~ 2)) %>%
   dplyr::group_by(ppid_trialn) %>%
   dplyr::filter(heading != 0) %>%
-  dplyr::filter(StraightVisible == 2) %>%
+  dplyr::filter(StraightVisible == TRUE) %>%
   dplyr::mutate(frame = row_number()) %>% # create frame number column
   dplyr::mutate(timestamp = frame / 60) %>% # creates equal timestamp for every trial
   dplyr::mutate(YawRate_seconds = case_when(heading > 0 ~ YawRate_seconds, 
@@ -190,7 +188,7 @@ steering_peak <- onset_timecourse %>%
   dplyr::select(ppid_trialn, heading, heading_signed, startingpos, frame, diff_YR, timestamp, pNum, WorldYaw, SWA, diff_SWA, rotatedX, rotatedZ, YawRate_seconds) %>%
   dplyr::group_by(ppid_trialn) %>%
   dplyr::mutate(peak.swa = max(SWA)) %>% # select peak differentiated yaw from signal
-  dplyr::slice(max(first(which(SWA >= peak.swa)))) %>% # select row of data differentiated yaw is equal to the peak
+  dplyr::slice(max(dplyr::first(which(SWA >= peak.swa)))) %>% # select row of data differentiated yaw is equal to the peak
   dplyr::ungroup() %>%
   dplyr::transmute(ppid_trialn, heading, heading_signed, startingpos, PeakSteeringTime = timestamp, pNum = pNum, peakSWA = SWA, steering_rate = diff_SWA, peak_rotatedX = rotatedX, peak_rotatedZ = rotatedZ)
 
@@ -214,16 +212,13 @@ magnitudedata <- magnitudedata %>%
   dplyr::filter(heading > 0)
 ```
 
-Peak of steering response is captured alongside relevant steering metrics. For both the start and peak of the response, the smoothed yaw rate signal is processed because a change in yaw rate indicates an active change in the direction of the vehicle. At the peak of this yaw rate change signal, the associated steering metrics are selected for each trial. 
+Peak of steering response is captured alongside relevant steering metrics (timings and xy coordinates). For both the start and peak of the response, the smoothed yaw rate signal is processed because a change in yaw rate indicates an active change in the direction of the vehicle. At the peak of this yaw rate change signal, the associated steering metrics are selected for each trial. 
 
-I then merge the steering onset and peak dataframes to one main dataframe. 
+I then merge the steering onset and steering peak dataframes to one main dataframe - magnitudedata. 
 
-#### Experiment 2 analysis - calculating lane position
+#### Calculating lane position
 
-The next section of this analysis calculates the lateral position error from the road line at steering onset. The aim of this section of the analysis is:
-
-- calculate lateral position error from road line at steering onset
-- merge dataframe with main dataframe that contains the rest of the steering metrics
+The next section calculates the lateral position error from the road line at steering onset.
 
 ## Selecting world coordinates at beginning and end of trial
 
@@ -251,7 +246,7 @@ trueresponses <- as.vector(trueresponses) # creates ID vector for filtering
 dat <- dplyr::filter(dat, ppid_trialn %in% trueresponses) # filter the IDs in the ID vector
 ```
 
-World yaw, world x and world z values at the  beginning (first frame where road line is visible) and end (last frame where line is still visible -  subject has completed their turn of the angle they have observed) trials. 
+World yaw, world x and world z values at the  beginning (first frame where road line is visible) and end (last frame where line is still visible -  participant has completed their turn of the angle they have observed) trials. 
 
 ## Selecting world coordinates at steering onset
 
@@ -327,7 +322,7 @@ for (i in 1:length(dat$hypotenuse)){
 }
 ```
 
-Hypotenuse (longest side of a triangle and trajectory of the offset heading) is computed. This is done by subtracting the starting position X and Z coordinates from the position X and Z coordinates when the first steering response is made, squaring the result and adding them to values together. The square root is then taken.
+Hypotenuse (longest side of a right angle triangle and trajectory of the offset heading relative to the road-line) is computed. This is done by subtracting the starting position X and Z coordinates from the position X and Z coordinates when the first steering response is made, squaring the result and adding them to values together. The square root is then taken.
 
 Using these coordinates means measuring the distance traveled from the moment the line appears, to the moment that the trajectory starts to change (i.e. when the first steering response is triggered).
 
