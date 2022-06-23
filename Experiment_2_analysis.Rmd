@@ -347,28 +347,19 @@ Compute sin of the computed heading and multiple by the hypotenuse to calculate 
 
 I then merge dataframe with lane position metrics in with the dataframe steering metrics. 
 
-## Save full magnitude of response data set
+## Save full magnitude of response data set to working directory
 
 ```{r}
 magnitudedata <- magnitudedata %>%
   dplyr::filter(peakSWA > 0) %>%
   dplyr::filter(lane_position > 0)
 
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data")
-write.csv(magnitudedata, file = "magnitudedata.csv")
+write.csv(magnitudedata, file = here::here("TvA_analysis/Data/Processed/magnitudedata.csv"))
 ```
-
-#### Experiment 2 analysis - plotting trajectories
-
-The next part of this analysis script looks at plotting the trajectories of drivers for each condition.
 
 ## Calculating timecourse trials
 
 ```{r}
-"load in magnitude data"
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data")
-magnitudedata <- read.csv("magnitudedata.csv")
-
 "creating trial ID tag"
 trueresponses <- magnitudedata$ppid_trialn 
 trueresponses <- as.vector(trueresponses) 
@@ -387,6 +378,7 @@ responses_id_coords <- magnitudedata %>%
 true_responses <- merge(true_responses, responses_id_coords, by = "ppid_trialn")
 ```
 
+Creating a dataframe of timecourse data for trials where participants responded (true_responses). Also create a timecourse dataframe for trials where participant *did not* respond (false_responses).  
 
 ## Number of trials per condition
 
@@ -402,7 +394,7 @@ overalltrials <- workingdata %>%
   dplyr::summarise(OverallTrials = n()) %>% # calculate the number of each heading
   dplyr::ungroup()
 
-"number of trials considered not genuine"
+"number of trials considered not genuine due to steering response not being large enough"
 notgenuine <- false_responses %>%
   dplyr::mutate(heading = abs(heading)) %>%
   dplyr::group_by(ppid_trialn) %>%
@@ -417,9 +409,10 @@ trials <- cbind(overalltrials, notgenuine$NonGenuineTrials)
 
 colnames(trials) <- c("heading", "startingpos", "OverallTrials", "NonGenuineTrials")
 
+"response percentages"
 trials %>%
   dplyr::group_by(heading, startingpos) %>%
-  dplyr::summarise(responsepercentage = (NonGenuineTrials / OverallTrials) * 100)#
+  dplyr::summarise(responsepercentage = (NonGenuineTrials / OverallTrials) * 100)
 
 "percentage of genuine trials excluded for being too fast"
 genuine_too_fast <- magnitudedata %>%
@@ -432,7 +425,7 @@ genuine <- true_responses %>%
   dplyr::filter(heading != 0) %>%
   dplyr::mutate(heading = abs(heading)) %>%
   dplyr::group_by(ppid_trialn) %>%
-  dplyr::summarise(HeadingCondition = head(heading, n = 1), StartingPositionCondition = head(startingpos, n = 1)) %>% # select first trial
+  dplyr::summarise(HeadingCondition = head(heading, n = 1), StartingPositionCondition = head(startingpos, n = 1)) %>%
   dplyr::ungroup() %>% 
   dplyr::group_by(HeadingCondition, StartingPositionCondition) %>% # group the heading values
   dplyr::summarise(OverallTrials = n()) %>% # calculate the number of each heading
@@ -446,23 +439,40 @@ trials %>%
   dplyr::group_by(heading, startingpos) %>%
   dplyr::summarise(responsepercentage = (Responses / OverallTrials) * 100)
 
+# too fast
 genuine_too_fast
 
+# steering response not strong enough
 notgenuine
 ```
+
+Here I caluclate the numbers of trials that were moved due to participants responding too fast (genuine_too_fast) or if their steering responses were not sufficient to register as a response (notgenuine)/ Adding these numbers generates the total number of trials that were removed before analysis. 
 
 ## Analysing differences between signs
 
 ```{r}
+"computing sign variable"
 magnitudedata <- magnitudedata %>%
   dplyr::mutate(sign = case_when(heading_signed > 0 ~ 1,
                                  heading_signed < 0 ~ -1))
 
-ezANOVA(dv = FirstSteeringTime, wid = pNum, within = .(heading, sign), data = magnitudedata)
+"averaging across participants"
+ppt.magnitudedata <- magnitudedata %>%
+  dplyr::group_by(pNum, heading, startingpos, sign) %>%
+  dplyr::summarise(RT = mean(FirstSteeringTime), LPE = mean(lane_position), SWA = mean(peakSWA))
 
-ezANOVA(dv = lane_position, wid = pNum, within = .(heading, sign), data = magnitudedata)
+"reaction time"
+rt.aov <- aov(RT ~ heading*sign, data = ppt.magnitudedata)
+summary(rt.aov)
 
-ezANOVA(dv = peakSWA, wid = pNum, within = .(heading, sign), data = magnitudedata)
+"lane position"
+lpe.aov <- aov(LPE ~ heading*sign, data = ppt.magnitudedata)
+summary(lpe.aov)
 
+"steering wheel angle"
+swa.aov <- aov(SWA ~ heading*sign, data = ppt.magnitudedata)
+summary(swa.aov)
 ```
+
+Because of the repeated measures design, I have to average across participants to avoid pseduo-replciation of the sample (I don't have over 7000 participant. I have 20 participants, with a combined total of over 7000 observations between them). None of the metrics have a significant main effects of sign.
 
