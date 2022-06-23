@@ -81,7 +81,7 @@ workingdata <- unite(workingdata, ppid_trialn, ppid, trialn, sep = "_") # create
 upperthreshold <-  0.05 # upper threshold for consistent steering response
 lowerthreshold <-  0.02 # lower threshold for when response is initiated
 
-"timecourse from when line is visible"
+"1) timecourse from when line is visible and 2) mirroring steering metrics"
 linevisibletimecoursedata <- workingdata %>%
   dplyr::mutate(StraightVisible = case_when(StraightVisible == "False" ~ 1,
                                             StraightVisible == "True" ~ 2)) %>%
@@ -100,13 +100,13 @@ linevisibletimecoursedata <- workingdata %>%
   dplyr::mutate(diff_SWA = sgolayfilt(diff_SWA, n = 11)) %>%
   dplyr::ungroup()
 
-"recentre origin of X and Z coordinates"
+"3) recentre origin of X and Z coordinates"
 linevisibletimecoursedata <- linevisibletimecoursedata %>%
   dplyr::group_by(ppid_trialn) %>%
   dplyr::mutate(World_x_new = World_x - World_x[1]) %>%
   dplyr::mutate(World_z_new = World_z - World_z[1])
 
-"rotate X and Z coordinates by the yaw of the first frame - global to local"
+"4) rotate X and Z coordinates by the yaw of the first frame - global to local"
 linevisibletimecoursedata <- linevisibletimecoursedata %>%
   dplyr::group_by(ppid_trialn) %>%
   dplyr::mutate(WorldYaw_rads = WorldYaw / 180 * pi) %>%
@@ -114,7 +114,7 @@ linevisibletimecoursedata <- linevisibletimecoursedata %>%
   dplyr::mutate(rotatedZ = World_x_new * sin(WorldYaw_rads[1]) +  World_z_new * cos(WorldYaw_rads[1])) %>%
   dplyr::ungroup()
 
-"rotating X and Z coordinates by heading angle"
+"5) rotating X and Z coordinates by heading angle"
 linevisibletimecoursedata <- linevisibletimecoursedata %>%
   dplyr::mutate(heading_rads = heading / 180 * pi) %>%
   dplyr::group_by(ppid_trialn, heading_rads) %>%
@@ -122,7 +122,7 @@ linevisibletimecoursedata <- linevisibletimecoursedata %>%
   dplyr::mutate(rotatedZ = rotatedX * sin(heading_rads) +  rotatedZ * cos(heading_rads)) %>%
   dplyr::ungroup()
 
-"mirroring X transformed coordinates"
+"6) mirroring X transformed coordinates"
 linevisibletimecoursedata <- linevisibletimecoursedata %>%
   dplyr::group_by(ppid_trialn) %>%
   dplyr::mutate(rotatedX = case_when(heading > 0 ~ rotatedX,
@@ -136,17 +136,13 @@ linevisibletimecoursedata <- linevisibletimecoursedata %>%
 
 2) Steering metrics are mirrored. 
 
-3) Coordinates are then transformed from global system to local system for plotting.
+3) X and Z coordinates are recentred. This means that I subtract the first world x and z coordinate from the rest of the coordinates values. This shifts them all to start from 0. 
 
-4) X and Z coordinates are recentred. This means that I subtract the first world x and z coordinate from the rest of the coordinates values. This shifts them all to start from 0. 
+4) Coordinates are then transformed from global system to local system for plotting.
 
-5) The coordinates are then rotated by the yaw of the first frame to convert them from global to local coordinates. 
+5) X and Z coordinates are then rotated by the heading angle. This means that when plotting, the road line can be plotted as a straight vertical line from 0 on the x axis, with the trajectory of the vehicle being offset.
 
-6) X and Z coordinates are then rotated by the heading angle. This means that when plotting, the road line can be plotted as a straight vertical line from 0 on the x axis, with the trajectory of the vehicle being offset.
-
-7) The rotated world x coordinate is then mirrored. 
-
-8)  A dataframe is created of the trajectories for each experimental manipulation. I start with a straight trajectory and then rotate this by the number of degrees (in radian units) for each heading to get the trajectory of the offset if drivers did not steer the vehicle. 
+6) The rotated world x coordinate is then mirrored. 
 
 ## Trajectory
 
@@ -162,6 +158,8 @@ trajectory <- linevisibletimecoursedata %>%
   dplyr::mutate(roadZ = roadX * sin(heading_rads) +  roadZ * cos(heading_rads)) %>%
   dplyr::ungroup()
 ```
+
+A dataframe is created of the trajectories for each experimental manipulation. I start with a straight trajectory and then rotate this by the number of degrees (in radian units) for each heading to get the trajectory of the offset if drivers did not steer the vehicle. 
 
 ## Steering response onset
 
