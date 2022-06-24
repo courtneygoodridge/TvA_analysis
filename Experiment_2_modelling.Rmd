@@ -102,7 +102,6 @@ library(readr)
 ```{r}
 magnitudedata <- read.csv(here::here("TvA_analysis/Data/Processed/magnitudedata.csv"))
 
-
 magnitudedata <- magnitudedata %>%
   dplyr::filter(EarlyResponses == FALSE)
 ```
