@@ -16,31 +16,85 @@ This script takes the magnitudedata dataset from the Experiment_2_analysis.Rmd f
 ## Load packages
 
 ```{r}
+if(!require(effsize)) install.packages("effsize")
 library(effsize)
-library(sjstats) # calculates effect size for ANOVA
-library(car) # performs ANOVA
-library(dplyr) # data manipulation
-library(tidyr) # data manipulation
-library(Rmisc) # for plotting interactions
-library(ggplot2) # data vis 
-library(readr) # loading data
-library(BayesFactor) # performs Bayesian ANOVA
-library(rstanarm) # bayesian regression modelling
-library(bayestestR) # describes Bayesian models and posterior distributions
-library(bayesplot) # allows plots for posterior predictive distributions
-library(fitdistrplus) # look at distribution
-library(emmeans) # for computing estimated marginal means for Bayesian models
-library(lme4) # mixed effects modelling 
-library(fitdistrplus) # shows distribution of data 
-library(gamlss) # fitting glmer with log normal distribution
-library(wesanderson) # for Wes Anderson colour palette for plots
-library(lmerTest) # provides p values for lmer models
+
+
+library(statmod)
+
+if(!require(statmod)) install.packages("statmod")
+library(statmod)
+
+if(!require(sjstats)) install.packages("sjstats")
+library(sjstats)
+
+if(!require(car)) install.packages("car")
+library(car)
+
+if(!require(dplyr)) install.packages("dplyr")
+library(dplyr)
+
+if(!require(tidyr)) install.packages("tidyr")
+library(tidyr)
+
+if(!require(Rmisc)) install.packages("Rmisc")
+library(Rmisc)
+
+if(!require(ggplot2)) install.packages("ggplot2")
+library(ggplot2)
+
+if(!require(readr)) install.packages("readr")
+library(readr)
+
+if(!require(BayesFactor)) install.packages("BayesFactor")
+
+if(!require(V8)) install.packages("V8")
+library(V8)
+
+if(!require(V8)) install.packages("V8")
+library(V8)
+
+if(!require(rstanarm)) install.packages("rstanarm")
+library(rstanarm)
+
+if(!require(bayestestR)) install.packages("bayestestR")
+library(bayestestR)
+
+if(!require(bayesplot)) install.packages("bayesplot")
+library(bayesplot)
+
+if(!require(emmeans)) install.packages("emmeans")
+library(emmeans)
+
+if(!require(lme4)) install.packages("lme4")
+library(lme4)
+
+if(!require(wesanderson)) install.packages("wesanderson")
+library(wesanderson)
+
+if(!require(lmerTest)) install.packages("lmerTest")
+library(lmerTest)
+
+if(!require(latex2exp)) install.packages("latex2exp")
 library(latex2exp)
-library(ez) # anova 
-library(GLMMadaptive) # covariance for multi level 
-library(r2glmm)
+
+if(!require(ez)) install.packages("ez")
+library(latex2exp)
+
+if(!require(rstatix)) install.packages("rstatix")
 library(rstatix)
-library(effsize)
+
+if(!require(latex2exp)) install.packages("latex2exp")
+library(latex2exp)
+
+if(!require(here)) install.packages("here")
+library(here)
+
+if(!require(data.table)) install.packages("data.table")
+library(data.table)
+
+if(!require(readr)) install.packages("readr")
+library(readr)
 ```
 
 ## Load data
@@ -53,49 +107,12 @@ magnitudedata <- magnitudedata %>%
   dplyr::filter(EarlyResponses == FALSE)
 ```
 
-## Comparing steering metrics across bends
-
-```{r}
-magnitudedata <- magnitudedata %>%
-  dplyr::mutate(signed = case_when(heading_signed < 0 ~ -1,
-                                   heading_signed > 0 ~ 1))
-
-mod.rt <- ezANOVA(magnitudedata, dv = FirstSteeringTime, wid = pNum, within = .(heading, signed), type = 3, detailed = TRUE, return_aov = TRUE)
-mod.rt
-
-mod.lpe <- ezANOVA(magnitudedata, dv = lane_position, wid = pNum, within = .(heading, signed), type = 3, detailed = TRUE, return_aov = TRUE)
-mod.lpe
-
-mod.swa <- ezANOVA(magnitudedata, dv = peakSWA, wid = pNum, within = .(heading, signed), type = 3, detailed = TRUE, return_aov = TRUE)
-mod.swa
-
-
-
-magnitudedata$sign <- as.factor(as.character(magnitudedata$sign))
-
-magnitudedata %>%
-  dplyr::group_by(heading_signed) %>%
-  dplyr::summarise(swa = mean(peakSWA))
-
-t.test(FirstSteeringTime ~ heading_signed, data = magnitudedata %>%
-         dplyr::filter(heading == 2))
-
-cohen.d(FirstSteeringTime ~ heading_signed, data = magnitudedata %>%
-         dplyr::filter(heading == 2))
-```
-
 ## theme settings
 
 ```{r}
 theme_plot <-   theme(axis.title.x = element_text(size = 15), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 15), axis.text.y = element_text(size = 12), title = element_text(size = 12), legend.title = element_text(size = 15), legend.text = element_text(size = 15), panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
 panel.background = element_blank(), axis.line = element_line(colour = "black"))
 ```
-
-#### Experiment 2 modelling - fitting generalised linear mixed effects model.
-
-The following modeling script aims to do the following:
-
-- fit generalised linear mixed effects model to steering metrics
 
 ## Zeroing heading variable
 
@@ -108,7 +125,7 @@ magnitudedata <- magnitudedata %>%
                                          heading == 2 ~ 1))
 ```
 
-This is done for easier interpretation of the main effects. I.e. a heading of 1 degree is the baseline amount of error development. Thus the main effect indicates the effect of increasing this rate of error development by a factor of one. 
+This is done for easier interpretation of the main effects i.e. a heading of 1 degree is the baseline rate of error development. Thus the main effect indicates the effect of increasing this rate of error development by a factor of one. 
 
 ## Fitting model for reaction time data 
 
@@ -137,6 +154,8 @@ VarCorr(fit.gamma.rt)
 plot(fit.gamma.rt)
 ```
 
+Fitting models with Gamma, Inverse Gaussian, and normal distributions. Random effects in random slopes by heading and starting position. Intercept allowed to vary by participant. 
+
 ## Fitting model for lateral position error data 
 
 ```{r}
@@ -161,7 +180,7 @@ confint(fit.gaus.lpe, method = "Wald")
 VarCorr(fit.gaus.lpe)
 
 "residual vs fitted"
-plot(fit.gaus.rt)
+plot(fit.gaus.lpe)
 ```
 
 ## Fitting model for steering magnitude data 
@@ -182,7 +201,7 @@ fit.gaus.swa <- lmerTest::lmer(peakSWA ~ heading_zero * startingpos + (heading_z
                     data = magnitudedata)
 
 "model diagnostics"
-AIC(fit.gaus.swa, fit.gamma.swa, fit.invgauss.swa)
+AIC(fit.gamma.swa, fit.invgauss.swa)
 summary(fit.gamma.swa)
 confint(fit.gamma.swa, method = "Wald")
 VarCorr(fit.gamma.swa)
@@ -216,8 +235,7 @@ mean(between_level$four_eight)
 sd(between_level$four_eight)
 
 t.test(between_level$zero_four, between_level$four_eight, paired = TRUE)
-cohen.d(between_level$zero_four, between_level$four_eight)
-
+cohen.d(between_level$zero_four, between_level$four_eight, paired = TRUE)
 ```
 
 ## Using t-tests to investigate between-level differences and lateral position error
