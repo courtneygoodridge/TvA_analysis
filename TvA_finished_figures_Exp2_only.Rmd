@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 #### TvA analysis script - manuscripts
 
-This script produces the maunscript figures from the paper and saves them into the manuscript plots folder. Data for plotting is taken from the Data folder and the relevant sub folders within them. 
+This script produces the maunscript figures from the paper and saves them into the *Manuscript plots* folder. Data for plotting is taken from the Data folder and the relevant sub folders within them. 
 
 ## Packages
 
@@ -118,7 +118,10 @@ ggplot() +
   theme_plot +
   theme(legend.position = c(0.33, 0.83), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.05,0.05,0,0, unit = "cm"), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.y = element_text(size = 12), plot.title = element_text(size = 20, face = "bold"), axis.title.x = element_text(size = 12), axis.ticks.x = element_blank(), axis.text.x = element_blank(), title = element_text(size = 9), legend.title = element_text(size = 11, face = "bold"), legend.text = element_text(size = 11), axis.line.y = element_line(arrow = grid::arrow(length = unit(0.5, "cm"), ends = "last")), axis.line.x = element_line(arrow = grid::arrow(length = unit(0.5, "cm"), ends = "last")))
 
-  ggsave('Fig1.tiff', plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 600, type = 'cairo')
+  ggsave(here::here("TvA_analysis/Manuscript plots/Fig1.tiff"), plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 600, type = 'cairo')
+  
+  
+  
 ```
 
 Threshold versus Accumulator example. 
