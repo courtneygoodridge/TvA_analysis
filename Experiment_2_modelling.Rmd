@@ -238,6 +238,8 @@ t.test(between_level$zero_four, between_level$four_eight, paired = TRUE)
 cohen.d(between_level$zero_four, between_level$four_eight, paired = TRUE)
 ```
 
+Invetsigating whether between level differences change between 0 and 4 m of starting position versus 4 m and 8 m of starting position. For reaction time, this appears to be so.
+
 ## Using t-tests to investigate between-level differences and lateral position error
 
 ```{r}
@@ -265,6 +267,9 @@ sd(between_level$four_eight)
 t.test(between_level$zero_four, between_level$four_eight, paired = TRUE)
 cohen.d(between_level$zero_four, between_level$four_eight, paired = TRUE)
 ```
+
+
+Invetsigating whether between level differences change between 0 and 4 m of starting position versus 4 m and 8 m of starting position. For lateral position error, this appears to be so.
 
 ## Using t-tests to investigate between-level differences and steering wheel angle
 
@@ -318,3 +323,8 @@ sd(between_level$four_eight)
 t.test(between_level$zero_four, between_level$four_eight, paired = TRUE)
 cohen.d(between_level$zero_four, between_level$four_eight)
 ```
+
+
+Invetsigating whether between level differences change between 0 and 4 m of starting position versus 4 m and 8 m of starting position. For steering wheel angle, this is not the case. Between level differences are larger between 0 and 4 versus 4 and 8 for 1 degree of orientation, however the opposite is true for 2 degrees.
+
+This is indicaive of Accumulation, but does not fully mirror lateral position error results. This could be due to steering wheel angle being an inherently more noisy measure. 
