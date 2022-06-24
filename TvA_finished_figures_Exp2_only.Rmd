@@ -35,9 +35,6 @@ library(pracma)
 if(!require(wesanderson)) install.packages("wesanderson")
 library(wesanderson)
 
-if(!require(girdExtra)) install.packages("gridExtra")
-library(gridExtra)
-
 if(!require(ggsci)) install.packages("ggsci")
 library(ggsci)
 
@@ -73,6 +70,9 @@ library(data.table)
 
 if(!require(readr)) install.packages("readr")
 library(readr)
+
+if(!require(gridExtra)) install.packages("gridExtra")
+library(gridExtra)
 ```
 
 ## Theme plot
@@ -119,9 +119,6 @@ ggplot() +
   theme(legend.position = c(0.33, 0.83), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.05,0.05,0,0, unit = "cm"), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.y = element_text(size = 12), plot.title = element_text(size = 20, face = "bold"), axis.title.x = element_text(size = 12), axis.ticks.x = element_blank(), axis.text.x = element_blank(), title = element_text(size = 9), legend.title = element_text(size = 11, face = "bold"), legend.text = element_text(size = 11), axis.line.y = element_line(arrow = grid::arrow(length = unit(0.5, "cm"), ends = "last")), axis.line.x = element_line(arrow = grid::arrow(length = unit(0.5, "cm"), ends = "last")))
 
   ggsave(here::here("TvA_analysis/Manuscript plots/Fig1.tiff"), plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 600, type = 'cairo')
-  
-  
-  
 ```
 
 Threshold versus Accumulator example. 
@@ -129,11 +126,9 @@ Threshold versus Accumulator example.
 ## Figure 3
 
 ```{r}
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Full_Data/Exp_Design_Data")
-trajectory <- read.csv("trajectory.csv")
-experiment_2_coordinates <- read.csv("experiment_2_coordinates.csv")
+trajectory <- read.csv(here::here("TvA_analysis/Data/Exp_Design_Data/trajectory.csv"))
+experiment_2_coordinates <- read.csv(here::here("TvA_analysis/Data/Exp_Design_Data/experiment_2_coordinates.csv"))
 
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
 ggplot() +
   geom_path(trajectory %>%
               dplyr::filter(heading == 1 | heading == 2) %>%
@@ -200,25 +195,23 @@ ggplot() +
   xlim(-0.9, 0.9) +
   theme_plot +
   theme(legend.position = c(0.20, 0.20), legend.key.height = unit(0, 'cm'), legend.key.width = unit(0.5, 'cm'), legend.key = element_blank(), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.05,0.05,0,0, unit = "cm"), legend.key.size = unit(0, 'cm'), plot.title = element_text(size = 19, face = "bold"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) +
-  ggsave('Fig3.tiff', plot = last_plot(), width = 12, height = 7, units = 'cm', dpi = 600, type = 'cairo')
-
-
-  theme(legend.position = c(0.55, 0.75), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
+  ggsave(here::here("TvA_analysis/Manuscript plots/Fig3.tiff"), plot = last_plot(), width = 12, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 ```
+
+Experimental design. Details orientation angles and starting position locations from bird's eye view. 
 
 ## Figure 4
 
 ```{r}
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Full_Data/Sim_Data/Exp2_sims")
-thresh.1 <- read.csv("thresh_1.csv", header = FALSE) %>%
+thresh.1 <- read.csv(here::here("TvA_analysis/Data/Sim_Data/thresh_1.csv"), header = FALSE) %>%
   dplyr::mutate(X = row_number()) %>%
   dplyr::mutate(startingpos = 0)
 
-thresh.2 <- read.csv("thresh_2.csv", header = FALSE) %>%
+thresh.2 <- read.csv(here::here("TvA_analysis/Data/Sim_Data/thresh_2.csv"), header = FALSE) %>%
   dplyr::mutate(X = row_number()) %>%
   dplyr::mutate(startingpos = 4)
   
-thresh.3 <- read.csv("thresh_3.csv", header = FALSE) %>%
+thresh.3 <- read.csv(here::here("TvA_analysis/Data/Sim_Data/thresh_3.csv"), header = FALSE) %>%
   dplyr::mutate(X = row_number()) %>%
   dplyr::mutate(startingpos = 8)
 
@@ -239,7 +232,6 @@ v.palette.3 <- pal_d3("category10")(5)[4]
 v.palette <- c(v.palette.1, v.palette.2, v.palette.3)
 
 "Plotting"
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
 ggplot() +
   geom_path(thresh, mapping = aes(x = X, y = V1, col = as.factor(startingpos))) +
   geom_area(thresh %>%
@@ -270,16 +262,16 @@ ggplot() +
   ylab("Perceived control error E") +
   theme_plot +
   theme(legend.position = c(0.33, 0.80), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.05,0.05,0,0, unit = "cm"), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.y = element_text(size = 12), plot.title = element_text(size = 20, face = "bold"), axis.title.x = element_text(size = 12), axis.ticks.x = element_blank(), axis.text.x = element_blank(), title = element_text(size = 9), legend.title = element_text(size = 11, face = "bold"), legend.text = element_text(size = 11), axis.line.y = element_line(arrow = grid::arrow(length = unit(0.5, "cm"), ends = "last")), axis.line.x = element_line(arrow = grid::arrow(length = unit(0.5, "cm"), ends = "last"))) +
-  ggsave('Fig4.tiff', plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 600, type = 'cairo')
+  ggsave(here::here("TvA_analysis/Manuscript plots/Fig4.tiff"), plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 ```
+
+Schematic representation of Threshold and Accumulator differences when including an initial error manipulation within the design. 
 
 ## Figure 5
 
 ```{r}
-"load in model predictions"
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data/Sim_Data")
-accum_response_latency <- read.csv("accum_rt_latency_exp2.csv", header = FALSE)
-threshold_response_latency <- read.csv("threshold_rt_latency_exp2.csv", header = FALSE)
+accum_response_latency <- read.csv(here::here("TvA_analysis/Data/Sim_Data/accum_rt_latency_exp2.csv"), header = FALSE)
+threshold_response_latency <- read.csv(here::here("TvA_analysis/Data/Sim_Data/threshold_rt_latency_exp2.csv"), header = FALSE)
 
 "cleaning dataframes"
 accum_response_latency$V1 <- NULL
@@ -303,9 +295,8 @@ threshold_response_latency$heading <- as.numeric(as.character(threshold_response
 
 sim_preds_response <- rbind(accum_response_latency, threshold_response_latency)
 
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data")
-magnitudedata <- read.csv("magnitudedata.csv")
-
+"load in steering data"
+magnitudedata <- read.csv(here::here("TvA_analysis/Data/Processed/magnitudedata.csv"))
 magnitudedata <- magnitudedata %>%
   dplyr::filter(EarlyResponses == FALSE)
 
@@ -347,13 +338,13 @@ data.plot <- ggplot() +
   theme_plot +
   theme(legend.position = "none", legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
 
-
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
 g <- arrangeGrob(acc.plot, thresh.plot, data.plot, nrow = 1)
-  ggsave('Fig5.tiff', g,  width = 15, height = 7, units = 'cm', dpi = 600, type = 'cairo')
+  ggsave(here::here("TvA_analysis/Manuscript plots/Fig5.tiff"), g,  width = 15, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 ```
 
-## Figure 6
+Accumulator vs Threshold predictions + RT data.
+
+## Figure 6 ######START BACK HERE ON MONDAY#######
 
 ```{r}
 setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data")
