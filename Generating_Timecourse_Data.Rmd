@@ -1,0 +1,153 @@
+---
+title: "Timecourse data"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## load packages
+
+```{r}
+if(!require(here)) install.packages("here")
+library(here)
+
+if(!require(ggplot2)) install.packages("ggplot2")
+library(ggplot2)
+
+if(!require(dplyr)) install.packages("dplyr")
+library(dplyr)
+
+if(!require(tidyr)) install.packages("tidyr")
+library(tidyr)
+
+if(!require(latex2exp)) install.packages("latex2exp")
+library(latex2exp)
+
+if(!require(pracma)) install.packages("pracma")
+library(pracma)
+
+if(!require(pracma)) install.packages("pracma")
+library(pracma)
+
+if(!require(wesanderson)) install.packages("wesanderson")
+library(wesanderson)
+
+if(!require(ggsci)) install.packages("ggsci")
+library(ggsci)
+
+if(!require(signal)) install.packages("signal")
+library(signal)
+
+if(!require(lme4)) install.packages("lme4")
+library(lme4)
+
+if(!require(lmerTest)) install.packages("lmerTest")
+library(lmerTest)
+
+if(!require(Rmisc)) install.packages("Rmisc")
+library(Rmisc)
+
+if(!require(viridis)) install.packages("viridis")
+library(viridis)
+
+if(!require(viridisLite)) install.packages("viridisLite")
+library(viridisLite)
+
+if(!require(patchwork)) install.packages("patchwork")
+library(patchwork)
+
+if(!require(stargazer)) install.packages("stargazer")
+library(stargazer)
+
+if(!require(data.table)) install.packages("data.table")
+library(data.table)
+
+if(!require(readr)) install.packages("readr")
+library(readr)
+
+if(!require(gridExtra)) install.packages("gridExtra")
+library(gridExtra)
+```
+
+## generating timecourse dataframe
+
+```{r}
+myfiles = list.files(path = here::here("TvA_analysis/Data/Raw"), pattern = "*.csv", full.names = TRUE)
+workingdata  <- ldply(myfiles, read_csv)
+
+workingdata <- unite(workingdata, ppid_trialn, ppid, trialn, sep = "_") # create unique ppid_trialn ID
+
+"threshold metrics"
+upperthreshold <-  0.05 # upper threshold for consistent steering response
+lowerthreshold <-  0.02 # lower threshold for when response initiated
+
+"(1) + (2) timecourse from when line is visible"
+linevisibletimecoursedata <- workingdata %>%
+  dplyr::mutate(StraightVisible = case_when(StraightVisible == "FALSE" ~ 1,
+                                            StraightVisible == "TRUE" ~ 2)) %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::filter(heading != 0) %>%
+  dplyr::filter(StraightVisible == 2) %>%
+  dplyr::mutate(frame = row_number()) %>% # create frame number column
+  dplyr::mutate(timestamp = frame / 60) %>% # creates equal timestamp for every trial
+  dplyr::mutate(YawRate_seconds = case_when(heading > 0 ~ YawRate_seconds, 
+                                            heading < 0 ~ YawRate_seconds * -1)) %>%
+  dplyr::mutate(diff_YR = c(0, diff(YawRate_seconds))) %>% 
+  dplyr::mutate(diff_YR_smooth = sgolayfilt(diff_YR, n = 11)) %>%
+  dplyr::mutate(SWA = case_when(heading > 0 ~ SWA, 
+                                heading < 0 ~ SWA * -1)) %>%
+  dplyr::mutate(diff_SWA = c(0, diff(SWA))) %>%
+  dplyr::mutate(diff_SWA_smooth = sgolayfilt(diff_SWA, n = 11)) %>%
+  dplyr::ungroup()
+
+"(3) recentre origin of X and Z coordinates"
+linevisibletimecoursedata <- linevisibletimecoursedata %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::mutate(World_x_new = World_x - World_x[1]) %>%
+  dplyr::mutate(World_z_new = World_z - World_z[1])
+
+"(4) rotate X and Z coordinates by the yaw of the first frame - global to local"
+linevisibletimecoursedata <- linevisibletimecoursedata %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::mutate(WorldYaw_rads = WorldYaw / 180 * pi) %>%
+  dplyr::mutate(rotatedX = World_x_new * cos(WorldYaw_rads[1]) - World_z_new * sin(WorldYaw_rads[1])) %>%
+  dplyr::mutate(rotatedZ = World_x_new * sin(WorldYaw_rads[1]) +  World_z_new * cos(WorldYaw_rads[1])) %>%
+  dplyr::ungroup()
+
+"(5) rotating X and Z coordinates by heading angle"
+linevisibletimecoursedata <- linevisibletimecoursedata %>%
+  dplyr::mutate(heading_rads = heading / 180 * pi) %>%
+  dplyr::group_by(ppid_trialn, heading_rads) %>%
+  dplyr::mutate(rotatedX = rotatedX * cos(heading_rads) - rotatedZ * sin(heading_rads)) %>%
+  dplyr::mutate(rotatedZ = rotatedX * sin(heading_rads) +  rotatedZ * cos(heading_rads)) %>%
+  dplyr::ungroup()
+
+"(6) mirroring X transformed coordinates"
+linevisibletimecoursedata <- linevisibletimecoursedata %>%
+  dplyr::group_by(ppid_trialn) %>%
+  dplyr::mutate(rotatedX = case_when(heading > 0 ~ rotatedX,
+                                     heading < 0 ~ rotatedX * -1)) %>%
+  dplyr::mutate(heading_signed = heading) %>%
+  dplyr::mutate(heading = abs(heading)) %>%
+  dplyr::ungroup()
+
+"creating trial ID tag"
+trueresponses <- magnitudedata$ppid_trialn 
+trueresponses <- as.vector(trueresponses) 
+
+"creating dataframe for true and false responses"
+'%!in%' <- function(x,y)!('%in%'(x,y))
+
+true_responses <- dplyr::filter(linevisibletimecoursedata, ppid_trialn %in% trueresponses) 
+
+false_responses <- dplyr::filter(linevisibletimecoursedata, ppid_trialn %!in% trueresponses)
+
+"early responses ID and response time coordinates"
+responses_id_coords <- magnitudedata %>%
+  dplyr::select(ppid_trialn, EarlyResponses, FirstSteeringTime, start_rotatedX, start_rotatedZ)
+
+true_responses <- merge(true_responses, responses_id_coords, by = "ppid_trialn")
+```
+

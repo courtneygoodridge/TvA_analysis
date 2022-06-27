@@ -16,12 +16,17 @@ This script produces the maunscript figures from the paper and saves them into t
 ## Packages
 
 ```{r}
+if(!require(here)) install.packages("here")
+library(here)
+
 if(!require(ggplot2)) install.packages("ggplot2")
 library(ggplot2)
 
 if(!require(dplyr)) install.packages("dplyr")
+library(dplyr)
 
 if(!require(tidyr)) install.packages("tidyr")
+library(tidyr)
 
 if(!require(latex2exp)) install.packages("latex2exp")
 library(latex2exp)
@@ -62,9 +67,6 @@ library(patchwork)
 if(!require(stargazer)) install.packages("stargazer")
 library(stargazer)
 
-if(!require(here)) install.packages("here")
-library(here)
-
 if(!require(data.table)) install.packages("data.table")
 library(data.table)
 
@@ -73,6 +75,25 @@ library(readr)
 
 if(!require(gridExtra)) install.packages("gridExtra")
 library(gridExtra)
+```
+
+## Load in data
+
+```{r}magnitudedata <- read.csv(here::here("TvA_analysis/Data/Processed/magnitudedata.csv"))
+
+magnitudedata <- magnitudedata %>%
+  dplyr::filter(EarlyResponses == FALSE) %>%
+  dplyr::mutate(heading_zero = case_when(heading == 1 ~ 0,
+                                         heading == 2 ~ 1))
+"load in steering data"
+
+
+"generate timecourse dataframe"
+rmarkdown::render(here::here("TvA_analysis/Generating_Timecourse_Data.Rmd"))
+
+"coordinates for plots"
+trajectory <- read.csv(here::here("TvA_analysis/Data/Exp_Design_Data/trajectory.csv"))
+experiment_2_coordinates <- read.csv(here::here("TvA_analysis/Data/Exp_Design_Data/experiment_2_coordinates.csv"))
 ```
 
 ## Theme plot
@@ -126,9 +147,6 @@ Threshold versus Accumulator example.
 ## Figure 3
 
 ```{r}
-trajectory <- read.csv(here::here("TvA_analysis/Data/Exp_Design_Data/trajectory.csv"))
-experiment_2_coordinates <- read.csv(here::here("TvA_analysis/Data/Exp_Design_Data/experiment_2_coordinates.csv"))
-
 ggplot() +
   geom_path(trajectory %>%
               dplyr::filter(heading == 1 | heading == 2) %>%
@@ -295,11 +313,6 @@ threshold_response_latency$heading <- as.numeric(as.character(threshold_response
 
 sim_preds_response <- rbind(accum_response_latency, threshold_response_latency)
 
-"load in steering data"
-magnitudedata <- read.csv(here::here("TvA_analysis/Data/Processed/magnitudedata.csv"))
-magnitudedata <- magnitudedata %>%
-  dplyr::filter(EarlyResponses == FALSE)
-
 "RT predictions and data"
 acc.plot <- ggplot(sim_preds_response %>%
          dplyr::filter(perceptual_var == "visual_angle", model == "accumulator"), mapping = aes(x = heading, y = rt, linetype = as.factor(startingpos))) +
@@ -344,18 +357,11 @@ g <- arrangeGrob(acc.plot, thresh.plot, data.plot, nrow = 1)
 
 Accumulator vs Threshold predictions + RT data.
 
-## Figure 6 ######START BACK HERE ON MONDAY#######
+## Figure 6
 
 ```{r}
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data")
-magnitudedata <- read.csv("magnitudedata.csv")
-
-magnitudedata <- magnitudedata %>%
-  dplyr::filter(EarlyResponses == FALSE)
-
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data/Sim_Data")
-accum_error_latency <- read.csv("accum_lpe_latency_exp2.csv", header = FALSE)
-threshold_error_latency <- read.csv("threshold_lpe_latency_exp2.csv", header = FALSE)
+accum_error_latency <- read.csv(here::here("TvA_analysis/Data/Sim_Data/accum_lpe_latency_exp2.csv"), header = FALSE)
+threshold_error_latency <- read.csv(here::here("TvA_analysis/Data/Sim_Data/threshold_lpe_latency_exp2.csv"), header = FALSE)
 
 "cleaning dataframes"
 accum_error_latency$V1 <- NULL
@@ -416,10 +422,11 @@ data.plot <- ggplot() +
   theme_plot +
   theme(legend.position = "none", legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
 
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
 g <- arrangeGrob(acc.plot, thresh.plot, data.plot, nrow = 1)
-  ggsave('Fig6.tiff', g,  width = 15, height = 7, units = 'cm', dpi = 600, type = 'cairo')
+  ggsave(here::here("TvA_analysis/Manuscript plots/Fig6.tiff"), g,  width = 15, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 ```
+
+Accumulator vs Threshold predictions + lateral position error data.
 
 ## Figure 7
 
@@ -472,111 +479,27 @@ data.plot <- ggplot() +
   theme_plot +
   theme(legend.position = "none", legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
 
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
 g <- arrangeGrob(acc.plot, thresh.plot, data.plot, nrow = 1)
-  ggsave('Fig7.tiff', g,  width = 15, height = 7, units = 'cm', dpi = 600, type = 'cairo')
+  ggsave(here::here("TvA_analysis/Manuscript plots/Fig7.tiff"), g,  width = 15, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 ```
 
 ## Figure 8
 
 ```{r}
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Full_Data") 
-magnitudedata <- read.csv("magnitudedata.csv") %>%
-  dplyr::filter(EarlyResponses == FALSE)
-
-"set working directory and load data"
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Full_Data") 
-temp = list.files(pattern = c("BenLui17_")) # list all CSV files in the directory
-myfiles = lapply(temp, read.csv) # read these CSV in the directory
-workingdata <- do.call(rbind.data.frame, myfiles) # convert and combine the CSV files into dataframe
-
-workingdata <- unite(workingdata, ppid_trialn, ppid, trialn, sep = "_") # create unique ppid_trialn ID
-
-"threshold metrics"
-upperthreshold <-  0.05 # upper threshold for consistent steering response
-lowerthreshold <-  0.02 # lower threshold for when response initiated
-
-"(1) + (2) timecourse from when line is visible"
-linevisibletimecoursedata <- workingdata %>%
-  dplyr::mutate(StraightVisible = case_when(StraightVisible == "False" ~ 1,
-                                            StraightVisible == "True" ~ 2)) %>%
-  dplyr::group_by(ppid_trialn) %>%
-  dplyr::filter(heading != 0) %>%
-  dplyr::filter(StraightVisible == 2) %>%
-  dplyr::mutate(frame = row_number()) %>% # create frame number column
-  dplyr::mutate(timestamp = frame / 60) %>% # creates equal timestamp for every trial
-  dplyr::mutate(YawRate_seconds = case_when(heading > 0 ~ YawRate_seconds, 
-                                            heading < 0 ~ YawRate_seconds * -1)) %>%
-  dplyr::mutate(diff_YR = c(0, diff(YawRate_seconds))) %>% 
-  dplyr::mutate(diff_YR_smooth = sgolayfilt(diff_YR, n = 11)) %>%
-  dplyr::mutate(SWA = case_when(heading > 0 ~ SWA, 
-                                heading < 0 ~ SWA * -1)) %>%
-  dplyr::mutate(diff_SWA = c(0, diff(SWA))) %>%
-  dplyr::mutate(diff_SWA_smooth = sgolayfilt(diff_SWA, n = 11)) %>%
-  dplyr::ungroup()
-
-"(3) recentre origin of X and Z coordinates"
-linevisibletimecoursedata <- linevisibletimecoursedata %>%
-  dplyr::group_by(ppid_trialn) %>%
-  dplyr::mutate(World_x_new = World_x - World_x[1]) %>%
-  dplyr::mutate(World_z_new = World_z - World_z[1])
-
-"(4) rotate X and Z coordinates by the yaw of the first frame - global to local"
-linevisibletimecoursedata <- linevisibletimecoursedata %>%
-  dplyr::group_by(ppid_trialn) %>%
-  dplyr::mutate(WorldYaw_rads = WorldYaw / 180 * pi) %>%
-  dplyr::mutate(rotatedX = World_x_new * cos(WorldYaw_rads[1]) - World_z_new * sin(WorldYaw_rads[1])) %>%
-  dplyr::mutate(rotatedZ = World_x_new * sin(WorldYaw_rads[1]) +  World_z_new * cos(WorldYaw_rads[1])) %>%
-  dplyr::ungroup()
-
-"(5) rotating X and Z coordinates by heading angle"
-linevisibletimecoursedata <- linevisibletimecoursedata %>%
-  dplyr::mutate(heading_rads = heading / 180 * pi) %>%
-  dplyr::group_by(ppid_trialn, heading_rads) %>%
-  dplyr::mutate(rotatedX = rotatedX * cos(heading_rads) - rotatedZ * sin(heading_rads)) %>%
-  dplyr::mutate(rotatedZ = rotatedX * sin(heading_rads) +  rotatedZ * cos(heading_rads)) %>%
-  dplyr::ungroup()
-
-"(6) mirroring X transformed coordinates"
-linevisibletimecoursedata <- linevisibletimecoursedata %>%
-  dplyr::group_by(ppid_trialn) %>%
-  dplyr::mutate(rotatedX = case_when(heading > 0 ~ rotatedX,
-                                     heading < 0 ~ rotatedX * -1)) %>%
-  dplyr::mutate(heading_signed = heading) %>%
-  dplyr::mutate(heading = abs(heading)) %>%
-  dplyr::ungroup()
-
-"creating trial ID tag"
-trueresponses <- magnitudedata$ppid_trialn 
-trueresponses <- as.vector(trueresponses) 
-
-"creating dataframe for true and false responses"
-'%!in%' <- function(x,y)!('%in%'(x,y))
-
-true_responses <- dplyr::filter(linevisibletimecoursedata, ppid_trialn %in% trueresponses) 
-
-false_responses <- dplyr::filter(linevisibletimecoursedata, ppid_trialn %!in% trueresponses)
-
-"early responses ID added to timecourse"
-responses_id <- magnitudedata %>%
-  dplyr::select(ppid_trialn, EarlyResponses, FirstSteeringTime)
-
-true_responses <- merge(true_responses, responses_id, by = "ppid_trialn")
-
 plot.steering.dat <- true_responses %>%
   dplyr::filter(EarlyResponses == FALSE) %>%
   dplyr::group_by(ppid_trialn) %>%
   dplyr::mutate(peak.sr = max(diff_SWA_smooth), peak.swa = max(SWA)) %>%
   dplyr::filter(peak.sr > 0.8) %>%
   dplyr::filter(abs(heading) == 2) %>%
-  dplyr::filter(ppid_trialn == "14_2_32")
+  dplyr::filter(ppid_trialn == "14_3_10")
 
 swa.plot <- ggplot() +
   geom_line(plot.steering.dat, mapping = aes(x = timestamp, y = SWA)) +
   geom_point(magnitudedata %>%
-               dplyr::filter(ppid_trialn == "14_2_32"), mapping = aes(x = PeakSteeringTime, y = peakSWA)) +
+               dplyr::filter(ppid_trialn == "14_3_10"), mapping = aes(x = PeakSteeringTime, y = peakSWA)) +
   scale_x_continuous(limits = c(0, 2.6), expand = c(0, 0)) +
-  scale_y_continuous(limits = c(-7, 14), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(-8, 15), expand = c(0, 0)) +
   ggtitle("B") +
   ylab("Steering wheel angle (°)") +
   xlab("Time (s)") +
@@ -597,107 +520,15 @@ sr.plot <- ggplot(data = plot.steering.dat) +
   theme_plot +
   theme(legend.position = c(0.55, 0.75), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 20, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
 
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
 g <- arrangeGrob(sr.plot, swa.plot, nrow = 1)
-ggsave('Fig8.tiff', g,  width = 15, height = 7, units = 'cm', dpi = 600, type = 'cairo')
-
-
-
-  theme(legend.position = c(0.55, 0.75), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
+ggsave(here::here("TvA_analysis/Manuscript plots/Fig8.tiff"), g,  width = 15, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 ```
+
+comparison of steering wheel angle over time and steering rate over time. 
+
 ## Figure 9
 
 ```{r}
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data") 
-temp = list.files(pattern = c("BenLui17_EXP2_")) # list all CSV files in the directory
-myfiles = lapply(temp, read.csv) # read these CSV in the directory
-workingdata <- do.call(rbind.data.frame, myfiles) # convert and combine the CSV files into dataframe
-
-"creating trial ID"
-workingdata <- unite(workingdata, ppid_trialn, ppid, trialn, sep = "_") # create unique ppid_trialn ID
-
-"threshold metrics"
-upperthreshold <-  0.05 # upper threshold for consistent steering response
-lowerthreshold <-  0.02 # lower threshold for when response is initiated
-
-"timecourse from when line is visible"
-linevisibletimecoursedata <- workingdata %>%
-  dplyr::mutate(StraightVisible = case_when(StraightVisible == "False" ~ 1,
-                                            StraightVisible == "True" ~ 2)) %>%
-  dplyr::group_by(ppid_trialn) %>%
-  dplyr::filter(heading != 0) %>%
-  dplyr::filter(StraightVisible == 2) %>%
-  dplyr::mutate(frame = row_number()) %>% # create frame number column
-  dplyr::mutate(timestamp = frame / 60) %>% # creates equal timestamp for every trial
-  dplyr::mutate(YawRate_seconds = case_when(heading > 0 ~ YawRate_seconds, 
-                                            heading < 0 ~ YawRate_seconds * -1)) %>%
-  dplyr::mutate(diff_YR = c(0, diff(YawRate_seconds))) %>% 
-  dplyr::mutate(diff_YR = sgolayfilt(diff_YR, n = 11)) %>%
-  dplyr::mutate(SWA = case_when(heading > 0 ~ SWA, 
-                                heading < 0 ~ SWA * -1)) %>%
-  dplyr::mutate(diff_SWA = c(0, diff(SWA))) %>%
-  dplyr::mutate(diff_SWA = sgolayfilt(diff_SWA, n = 11)) %>%
-  dplyr::ungroup()
-
-"recentre origin of X and Z coordinates"
-linevisibletimecoursedata <- linevisibletimecoursedata %>%
-  dplyr::group_by(ppid_trialn) %>%
-  dplyr::mutate(World_x_new = World_x - World_x[1]) %>%
-  dplyr::mutate(World_z_new = World_z - World_z[1])
-
-"rotate X and Z coordinates by the yaw of the first frame - global to local"
-linevisibletimecoursedata <- linevisibletimecoursedata %>%
-  dplyr::group_by(ppid_trialn) %>%
-  dplyr::mutate(WorldYaw_rads = WorldYaw / 180 * pi) %>%
-  dplyr::mutate(rotatedX = World_x_new * cos(WorldYaw_rads[1]) - World_z_new * sin(WorldYaw_rads[1])) %>%
-  dplyr::mutate(rotatedZ = World_x_new * sin(WorldYaw_rads[1]) +  World_z_new * cos(WorldYaw_rads[1])) %>%
-  dplyr::ungroup()
-
-"rotating X and Z coordinates by heading angle"
-linevisibletimecoursedata <- linevisibletimecoursedata %>%
-  dplyr::mutate(heading_rads = heading / 180 * pi) %>%
-  dplyr::group_by(ppid_trialn, heading_rads) %>%
-  dplyr::mutate(rotatedX = rotatedX * cos(heading_rads) - rotatedZ * sin(heading_rads)) %>%
-  dplyr::mutate(rotatedZ = rotatedX * sin(heading_rads) +  rotatedZ * cos(heading_rads)) %>%
-  dplyr::ungroup()
-
-"mirroring X transformed coordinates"
-linevisibletimecoursedata <- linevisibletimecoursedata %>%
-  dplyr::group_by(ppid_trialn) %>%
-  dplyr::mutate(rotatedX = case_when(heading > 0 ~ rotatedX,
-                                     heading < 0 ~ rotatedX * -1)) %>%
-  dplyr::mutate(heading_signed = heading) %>%
-  dplyr::mutate(heading = abs(heading)) %>%
-  dplyr::ungroup()
-
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Full_Data/Exp_Design_Data")
-trajectory <- read.csv("trajectory.csv")
-
-"load in magnitude data"
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_occlusion/Full_Data")
-magnitudedata <- read.csv("magnitudedata.csv")
-
-magnitudedata <- magnitudedata %>%
-  dplyr::filter(EarlyResponses == FALSE)
-
-"creating trial ID tag"
-trueresponses <- magnitudedata$ppid_trialn 
-trueresponses <- as.vector(trueresponses) 
-
-"creating dataframe for true and false responses"
-'%!in%' <- function(x,y)!('%in%'(x,y))
-
-true_responses <- dplyr::filter(linevisibletimecoursedata, ppid_trialn %in% trueresponses) 
-
-false_responses <- dplyr::filter(linevisibletimecoursedata, ppid_trialn %!in% trueresponses)
-
-"early responses ID and response time coordinates"
-responses_id_coords <- magnitudedata %>%
-  dplyr::select(ppid_trialn, EarlyResponses, FirstSteeringTime, start_rotatedX, start_rotatedZ)
-
-true_responses <- merge(true_responses, responses_id_coords, by = "ppid_trialn")
-
-
 "obtain x coordinate after travelling for 4 or 8 metres across the z direction of the experimental offset trajectory"
 four_x_coord <- trajectory %>%
   dplyr::group_by(heading) %>%
@@ -745,7 +576,6 @@ true_responses <- true_responses %>%
 my_cols <- c("#0B775E", "#F2300F")
 
 "Trajectory plot for Experiment 2"
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
 ggplot() +
   geom_path(true_responses %>%
               dplyr::filter(frame <= 150) %>%
@@ -773,8 +603,10 @@ ggplot() +
   scale_y_continuous(expand = c(0, 0)) +
   theme_plot +
   theme(legend.position = c(0.25, 0.30), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.1,0.1,0,0, unit = "cm"), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) +
-  ggsave('Fig9.tiff', plot = last_plot(), width = 10, height = 7, units = 'cm', dpi = 600, type = 'cairo')
+  ggsave(here::here("TvA_analysis/Manuscript plots/Fig9.tiff"), plot = last_plot(), width = 10, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 ```
+
+birdseye trajectory p[lot and average position relative to road-line at respone. 
 
 ## Table for random effects 
 
@@ -802,7 +634,6 @@ mod_stats <- tribble(~stat, ~fit.gamma.rt, ~fit.gaus.lpe, ~fit.gamma.swa,
 
 summary(null)
 
-setwd("C:/Users/pscmgo/OneDrive for Business/PhD/Project/Experiment_Code/experiment_1/Publication_figures/Finished_Figs_Exp2_only")
 stargazer(fit.gamma.swa, fit.gamma.swa, fit.gamma.swa, type = "text", 
           coef = list(c(mod_stats$fit.gamma.rt),
                       c(mod_stats$fit.gaus.lpe),
@@ -814,11 +645,7 @@ stargazer(fit.gamma.swa, fit.gamma.swa, fit.gamma.swa, type = "text",
           notes = "Participants: 20, Observations: 6163",
           model.names = FALSE,
           title = "Random effects",
-          out = "random.effects.exp2.html"
+          out = here::here("TvA_analysis/Manuscript plots/random.effects.exp2.html")
           )
 ```
 
-
-
-
-```
