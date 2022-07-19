@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 #### TvA analysis script - manuscripts
 
-This script produces the maunscript figures from the paper and saves them into the *Manuscript plots* folder. Data for plotting is taken from the Data folder and the relevant sub folders within them. 
+This script produces figures. Data for plotting is taken from the Data folder and the relevant sub folders within them. 
 
 ## Packages
 
@@ -79,13 +79,15 @@ library(gridExtra)
 
 ## Load in data
 
-```{r}magnitudedata <- read.csv(here::here("TvA_analysis/Data/Processed/magnitudedata.csv"))
+```{r}
+"load in steering data"
+magnitudedata <- read.csv(here::here("TvA_analysis/Data/Processed/magnitudedata.csv"))
 
 magnitudedata <- magnitudedata %>%
   dplyr::filter(EarlyResponses == FALSE) %>%
   dplyr::mutate(heading_zero = case_when(heading == 1 ~ 0,
                                          heading == 2 ~ 1))
-"load in steering data"
+
 
 
 "generate timecourse dataframe"
@@ -103,7 +105,7 @@ theme_plot <- theme(axis.title.x = element_text(size = 15), axis.text.x = elemen
 panel.background = element_blank(), axis.line = element_line(colour = "black"))
 ```
 
-## Figure 1
+## Figure 1 Theoretical differences between Threshold and Accumulator framework
 
 ```{r}
 slow.e <- seq(0, 5, 0.1)
@@ -142,9 +144,7 @@ ggplot() +
   ggsave(here::here("TvA_analysis/Manuscript plots/Fig1.tiff"), plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 ```
 
-Threshold versus Accumulator example. 
-
-## Figure 3
+## Figure 3 Bird's eye view of experimental paradigm. 
 
 ```{r}
 ggplot() +
@@ -216,9 +216,7 @@ ggplot() +
   ggsave(here::here("TvA_analysis/Manuscript plots/Fig3.tiff"), plot = last_plot(), width = 12, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 ```
 
-Experimental design. Details orientation angles and starting position locations from bird's eye view. 
-
-## Figure 4
+## Figure 4 Schematic representation of differences between Threshold and Accumulator predictions. 
 
 ```{r}
 thresh.1 <- read.csv(here::here("TvA_analysis/Data/Sim_Data/thresh_1.csv"), header = FALSE) %>%
@@ -283,58 +281,41 @@ ggplot() +
   ggsave(here::here("TvA_analysis/Manuscript plots/Fig4.tiff"), plot = last_plot(), width = 7, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 ```
 
-Schematic representation of Threshold and Accumulator differences when including an initial error manipulation within the design. 
-
-## Figure 5
+## Figure 5: Accumulator vs Threshold predictions + RT data.
 
 ```{r}
-accum_response_latency <- read.csv(here::here("TvA_analysis/Data/Sim_Data/accum_rt_latency_exp2.csv"), header = FALSE)
-threshold_response_latency <- read.csv(here::here("TvA_analysis/Data/Sim_Data/threshold_rt_latency_exp2.csv"), header = FALSE)
+"Loading in Threshold and Accumulator predictions"
+df_accum <- read.csv(here::here("TvA_analysis/Data/Sim_Data/df_accum.csv")) %>%
+  dplyr::mutate(model = "accumulator", heading = as.numeric(heading))
 
-"cleaning dataframes"
-accum_response_latency$V1 <- NULL
-accum_response_latency <- accum_response_latency[-c(1),]
+df_thresh <- read.csv(here::here("TvA_analysis/Data/Sim_Data/df_thresh.csv")) %>%
+  dplyr::mutate(model = "threshold", heading = as.numeric(heading))
 
-colnames(accum_response_latency) <- c("startingpos", "perceptual_var", "model", "heading", "rt")
-
-threshold_response_latency$V1 <- NULL
-threshold_response_latency <- threshold_response_latency[-c(1),]
-
-colnames(threshold_response_latency) <- c("startingpos", "perceptual_var", "model", "heading", "rt")
-
-"changing data types"
-accum_response_latency$rt <- as.numeric(as.character(accum_response_latency$rt))
-accum_response_latency$startingpos <- as.numeric(as.character(accum_response_latency$startingpos))
-accum_response_latency$heading <- as.numeric(as.character(accum_response_latency$heading))
-
-threshold_response_latency$rt <- as.numeric(as.character(threshold_response_latency$rt))
-threshold_response_latency$startingpos <- as.numeric(as.character(threshold_response_latency$startingpos))
-threshold_response_latency$heading <- as.numeric(as.character(threshold_response_latency$heading))
-
-sim_preds_response <- rbind(accum_response_latency, threshold_response_latency)
+"combing dataframes"
+sim_preds_response <- rbind(df_accum, df_thresh)
 
 "RT predictions and data"
 acc.plot <- ggplot(sim_preds_response %>%
-         dplyr::filter(perceptual_var == "visual_angle", model == "accumulator"), mapping = aes(x = heading, y = rt, linetype = as.factor(startingpos))) +
+         dplyr::filter(model == "accumulator"), mapping = aes(x = heading, y = timestamp, linetype = as.factor(startingpos))) +
   geom_line() +
   scale_linetype_manual(name = "Starting position (m)", labels = c("0", "4", "8"),  values = c("dotted", "dashed", "solid")) +
   scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
   ylab("Reaction time (s)") +
   ggtitle("A: Accumulator") +
-  ylim(0, 2) +
+  ylim(0, 1) +
   theme_plot +
-  theme(legend.position = c(0.55, 0.75), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
+  theme(legend.position = c(.55, .75), legend.key.height = unit(0, 'cm'), legend.key.width = unit(0.5, 'cm'), legend.key = element_blank(), strip.text.x = element_blank(), panel.spacing = unit(2, "lines"), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.05,0.05,0,0, unit = "cm"), legend.key.size = unit(0, 'cm'), plot.title = element_text(size = 12, face = "bold"), axis.text.x = element_text(size = 11), axis.title.x = element_text(size = 11), axis.title.y = element_text(size = 11), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.line.y = element_line(arrow = grid::arrow(length = unit(0.4, "cm"), ends = "last")))
 
 thresh.plot <- ggplot(sim_preds_response %>%
-         dplyr::filter(perceptual_var == "visual_angle", model == "threshold"), mapping = aes(x = heading, y = rt, linetype = as.factor(startingpos))) +
+         dplyr::filter(model == "threshold"), mapping = aes(x = heading, y = timestamp, linetype = as.factor(startingpos))) +
   geom_line() +
   scale_linetype_manual(name = "Starting position (m)", labels = c("0", "4", "8"),  values = c("dotted", "dashed", "solid")) +
   scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
   ylab("Reaction time (s)") +
-  ylim(0, 2) +
+  #ylim(0, 1.5) +
   ggtitle("B: Threshold") +
   theme_plot +
-  theme(legend.position = "none", legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
+    theme(legend.position = "none", legend.key.height = unit(0, 'cm'), legend.key.width = unit(0.5, 'cm'), legend.key = element_blank(), strip.text.x = element_blank(), panel.spacing = unit(2, "lines"), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.05,0.05,0,0, unit = "cm"), legend.key.size = unit(0, 'cm'), plot.title = element_text(size = 12, face = "bold"), axis.text.x = element_text(size = 11), axis.title.x = element_text(size = 11), axis.title.y = element_text(size = 11), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.line.y = element_line(arrow = grid::arrow(length = unit(0.4, "cm"), ends = "last")))
 
 errorbar.rt <- summarySE(magnitudedata, measurevar = "FirstSteeringTime", groupvars = c("heading", "startingpos"))
 
@@ -355,58 +336,31 @@ g <- arrangeGrob(acc.plot, thresh.plot, data.plot, nrow = 1)
   ggsave(here::here("TvA_analysis/Manuscript plots/Fig5.tiff"), g,  width = 15, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 ```
 
-Accumulator vs Threshold predictions + RT data.
-
-## Figure 6
+## Figure 6: Accumulator vs Threshold predictions + lateral position error data.
 
 ```{r}
-accum_error_latency <- read.csv(here::here("TvA_analysis/Data/Sim_Data/accum_lpe_latency_exp2.csv"), header = FALSE)
-threshold_error_latency <- read.csv(here::here("TvA_analysis/Data/Sim_Data/threshold_lpe_latency_exp2.csv"), header = FALSE)
-
-"cleaning dataframes"
-accum_error_latency$V1 <- NULL
-accum_error_latency <- accum_error_latency[-c(1),]
-
-colnames(accum_error_latency) <- c("startingpos", "perceptual_var", "model", "heading", "LPE")
-
-threshold_error_latency$V1 <- NULL
-threshold_error_latency <- threshold_error_latency[-c(1),]
-
-colnames(threshold_error_latency) <- c("startingpos", "perceptual_var", "model", "heading", "LPE")
-
-"changing data types"
-accum_error_latency$LPE <- as.numeric(as.character(accum_error_latency$LPE))
-accum_error_latency$startingpos <- as.numeric(as.character(accum_error_latency$startingpos))
-accum_error_latency$heading <- as.numeric(as.character(accum_error_latency$heading))
-
-threshold_error_latency$LPE <- as.numeric(as.character(threshold_error_latency$LPE))
-threshold_error_latency$startingpos <- as.numeric(as.character(threshold_error_latency$startingpos))
-threshold_error_latency$heading <- as.numeric(as.character(threshold_error_latency$heading))
-
-sim_preds_error <- rbind(accum_error_latency, threshold_error_latency)
-
 "LPE predictions and data"
-acc.plot <- ggplot(sim_preds_error %>%
-         dplyr::filter(perceptual_var == "visual_angle", model == "accumulator"), mapping = aes(x = heading, y = LPE, linetype = as.factor(startingpos))) +
+acc.plot <- ggplot(sim_preds_response %>%
+         dplyr::filter(model == "accumulator"), mapping = aes(x = heading, y = latpos, linetype = as.factor(startingpos))) +
   geom_line() +
   scale_linetype_manual(name = "Starting position (m)", labels = c("0", "4", "8"),  values = c("dotted", "dashed", "solid"), guide = guide_legend(reverse = TRUE)) +
   scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
   ylab("Lateral position error (m)") +
   ggtitle("A: Accumulator") +
-  ylim(0, 0.3) +
+  ylim(0, 0.6) +
   theme_plot +
-  theme(legend.position = c(0.55, 0.75), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
+  theme(legend.position = c(.55, .75), legend.key.height = unit(0, 'cm'), legend.key.width = unit(0.5, 'cm'), legend.key = element_blank(), strip.text.x = element_blank(), panel.spacing = unit(2, "lines"), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.05,0.05,0,0, unit = "cm"), legend.key.size = unit(0, 'cm'), plot.title = element_text(size = 12, face = "bold"), axis.text.x = element_text(size = 11), axis.title.x = element_text(size = 11), axis.title.y = element_text(size = 11), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.line.y = element_line(arrow = grid::arrow(length = unit(0.4, "cm"), ends = "last"))) 
 
-thresh.plot <- ggplot(sim_preds_error %>%
-         dplyr::filter(perceptual_var == "visual_angle", model == "threshold"), mapping = aes(x = heading, y = LPE, linetype = as.factor(startingpos))) +
+thresh.plot <- ggplot(sim_preds_response %>%
+         dplyr::filter(model == "threshold"), mapping = aes(x = heading, y = latpos, linetype = as.factor(startingpos))) +
   geom_line() +
   scale_linetype_manual(name = "Starting position (m)", labels = c("0", "4", "8"),  values = c("dotted", "dashed", "solid"), guide = guide_legend(reverse = TRUE)) +
   scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
   ylab("Lateral position error (m)") +
   ggtitle("B: Threshold") +
-  ylim(0, 0.3) +
+  ylim(0, 0.6) +
   theme_plot +
-  theme(legend.position = "none", legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
+  theme(legend.position = "none", legend.key.height = unit(0, 'cm'), legend.key.width = unit(0.5, 'cm'), legend.key = element_blank(), strip.text.x = element_blank(), panel.spacing = unit(2, "lines"), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.05,0.05,0,0, unit = "cm"), legend.key.size = unit(0, 'cm'), plot.title = element_text(size = 12, face = "bold"), axis.text.x = element_text(size = 11), axis.title.x = element_text(size = 11), axis.title.y = element_text(size = 11), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.line.y = element_line(arrow = grid::arrow(length = unit(0.4, "cm"), ends = "last"))) 
   
 errorbar.lpe <- summarySE(magnitudedata, measurevar = "lane_position", groupvars = c("heading", "startingpos"))
 
@@ -426,13 +380,11 @@ g <- arrangeGrob(acc.plot, thresh.plot, data.plot, nrow = 1)
   ggsave(here::here("TvA_analysis/Manuscript plots/Fig6.tiff"), g,  width = 15, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 ```
 
-Accumulator vs Threshold predictions + lateral position error data.
-
-## Figure 7
+## Figure 7: Accumulator vs Threshold predictions + steering rate error data.
 
 ```{r}
-sim_preds_error_swa <- sim_preds_error %>%
-  dplyr::mutate(SWA = LPE) %>%
+sim_preds_error_swa <- sim_preds_response %>%
+  dplyr::mutate(SWA = latpos) %>%
   dplyr::mutate(SWA = case_when(model == "threshold" & startingpos == 0 ~ 0.03694289 + 0.05,
                                 model == "threshold" & startingpos == 4 ~ 0.03794289 + 0.05,
                                 model == "threshold" & startingpos == 8 ~ 0.03955879 + 0.05,
@@ -442,19 +394,19 @@ sim_preds_error_swa <- sim_preds_error %>%
   dplyr::mutate(SWA = SWA * 50)
 
 acc.plot <- ggplot(sim_preds_error_swa %>%
-         dplyr::filter(perceptual_var == "visual_angle", model == "accumulator"), mapping = aes(x = heading, y = SWA, linetype = as.factor(startingpos))) +
+         dplyr::filter(model == "accumulator"), mapping = aes(x = heading, y = SWA, linetype = as.factor(startingpos))) +
   geom_line() +
   scale_linetype_manual(name = "Starting position (m)", labels = c("0", "4", "8"),  values = c("dotted", "dashed", "solid"), guide = guide_legend(reverse = TRUE)) +
   scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
   ylab("Steering wheel angle (°)") +
   ggtitle("A: Accumulator") +
-  ylim(0, 16) +
+  ylim(0, 30) +
   facet_wrap(~model) +
   theme_plot +
-  theme(legend.position = c(0.55, 0.75), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
+  theme(legend.position = c(.55, .75), legend.key.height = unit(0, 'cm'), legend.key.width = unit(0.5, 'cm'), legend.key = element_blank(), strip.text.x = element_blank(), panel.spacing = unit(2, "lines"), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.05,0.05,0,0, unit = "cm"), legend.key.size = unit(0, 'cm'), plot.title = element_text(size = 12, face = "bold"), axis.text.x = element_text(size = 11), axis.title.x = element_text(size = 11), axis.title.y = element_text(size = 11), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.line.y = element_line(arrow = grid::arrow(length = unit(0.4, "cm"), ends = "last"))) 
 
 thresh.plot <- ggplot(sim_preds_error_swa %>%
-         dplyr::filter(perceptual_var == "visual_angle", model == "threshold"), mapping = aes(x = heading, y = SWA, linetype = as.factor(startingpos))) +
+         dplyr::filter(model == "threshold"), mapping = aes(x = heading, y = SWA, linetype = as.factor(startingpos))) +
   geom_line() +
   scale_linetype_manual(name = "Starting position (m)", labels = c("0", "4", "8"),  values = c("dotted", "dashed", "solid"), guide = guide_legend(reverse = TRUE)) +
   scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
@@ -463,7 +415,7 @@ thresh.plot <- ggplot(sim_preds_error_swa %>%
   ylim(0, 16) +
   facet_wrap(~model) +
   theme_plot +
-  theme(legend.position = "none", legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) 
+  theme(legend.position = "none", legend.key.height = unit(0, 'cm'), legend.key.width = unit(0.5, 'cm'), legend.key = element_blank(), strip.text.x = element_blank(), panel.spacing = unit(2, "lines"), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.05,0.05,0,0, unit = "cm"), legend.key.size = unit(0, 'cm'), plot.title = element_text(size = 12, face = "bold"), axis.text.x = element_text(size = 11), axis.title.x = element_text(size = 11), axis.title.y = element_text(size = 11), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.line.y = element_line(arrow = grid::arrow(length = unit(0.4, "cm"), ends = "last"))) 
 
 errorbar.swa <- summarySE(magnitudedata, measurevar = "peakSWA", groupvars = c("heading", "startingpos"))
 
@@ -483,7 +435,7 @@ g <- arrangeGrob(acc.plot, thresh.plot, data.plot, nrow = 1)
   ggsave(here::here("TvA_analysis/Manuscript plots/Fig7.tiff"), g,  width = 15, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 ```
 
-## Figure 8
+## Figure 8: comparison of steering wheel angle over time and steering rate over time. 
 
 ```{r}
 plot.steering.dat <- true_responses %>%
@@ -524,9 +476,7 @@ g <- arrangeGrob(sr.plot, swa.plot, nrow = 1)
 ggsave(here::here("TvA_analysis/Manuscript plots/Fig8.tiff"), g,  width = 15, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 ```
 
-comparison of steering wheel angle over time and steering rate over time. 
-
-## Figure 9
+## Figure 9: birdseye trajectory plot and average position relative to road-line at response. 
 
 ```{r}
 "obtain x coordinate after travelling for 4 or 8 metres across the z direction of the experimental offset trajectory"
@@ -605,8 +555,6 @@ ggplot() +
   theme(legend.position = c(0.25, 0.30), legend.key.height = unit(0, 'cm'), legend.key = element_blank(), legend.key.width = unit(0.5, 'cm'), legend.key.size = unit(0, 'cm'), strip.text.x = element_blank(), legend.spacing.y = unit(0.1, "cm"), legend.margin = margin(0.1,0.1,0,0, unit = "cm"), plot.title = element_text(size = 13, face = "bold"), panel.spacing = unit(2, "lines"), axis.title.x = element_text(size = 12), axis.text.x = element_text(size = 12), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12), title = element_text(size = 7), legend.title = element_text(size = 10), legend.text = element_text(size = 10)) +
   ggsave(here::here("TvA_analysis/Manuscript plots/Fig9.tiff"), plot = last_plot(), width = 10, height = 7, units = 'cm', dpi = 600, type = 'cairo')
 ```
-
-birdseye trajectory p[lot and average position relative to road-line at respone. 
 
 ## Table for random effects 
 

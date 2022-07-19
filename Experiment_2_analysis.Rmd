@@ -18,27 +18,64 @@ Final dataframe is saved ready for multilevel modelling analysis in "Experiment_
 ## Load libraries
 
 ```{r}
-library(ggplot2) # for plots
-library(dplyr) # for manipulating data frames
-library(tidyr) # for tidying data (uniting columns)
-library(TTR) # for smoothing data with mean of observations
-library(zoo) # package for rolling mean
-library(skimr) # generates summary of data
-library(car) # to perform levene test and ANOVA
+if(!require(here)) install.packages("here")
+library(here)
+
+if(!require(ggplot2)) install.packages("ggplot2")
+library(ggplot2)
+
+if(!require(dplyr)) install.packages("dplyr")
+library(dplyr)
+
+if(!require(tidyr)) install.packages("tidyr")
+library(tidyr)
+
+if(!require(TTR)) install.packages("TTR")
+library(TTR)
+
+if(!require(zoo)) install.packages("zoo")
+library(zoo)
+
+if(!require(skimr)) install.packages("skimr")
+library(skimr)
+
+if(!require(car)) install.packages("car")
+library(car)
+
+if(!require(png)) install.packages("png")
 library(png)
-library(transformr)
-library(signal) # package needed for sgolayfilt function for steering magnitude 
-library(conflicted) # shows when packages have conflicted functions # conflict_prefer("filter", "dplyr")
-library(wesanderson) # Wes Anderson colour palette
-library(EnvCpt) # peak finding function
-library(pracma) # peak finding function
-library(wesanderson) # Wes Anderson colour palette
-library(splitstackshape) # adding ID column
-library(wesanderson) # colour palettes for plotting
-library(Rmisc)# misc functions for analysis
-library(here) # guides working directory
-library(data.table) #load data
-library(readr) # load data
+
+if(!require(transformr)) install.packages("transformr")
+library(transfomr)
+
+if(!require(signal)) install.packages("signal")
+library(signal)
+
+if(!require(conflicted)) install.packages("conflicted")
+library(conflicted)
+
+conflict_prefer("filter", "dplyr")
+
+if(!require(wesanderson)) install.packages("wesanderson")
+library(wesanderson)
+
+if(!require(EnvCpt)) install.packages("EnvCpt")
+library(EnvCpt)
+
+if(!require(pracma)) install.packages("pracma")
+library(pracma)
+
+if(!require(splitstackshape)) install.packages("splitstackshape")
+library(splitstackshape)
+
+if(!require(Rmisc)) install.packages("Rmisc")
+library(Rmisc)
+
+if(!require(data.table)) install.packages("data.table")
+library(data.table)
+
+if(!require(readr)) install.packages("readr")
+library(readr)
 ```
 
 # Load raw data
@@ -149,7 +186,7 @@ linevisibletimecoursedata <- linevisibletimecoursedata %>%
 trajectory <- linevisibletimecoursedata %>%
   dplyr::filter(frame <= 150) %>%
   dplyr::group_by(heading, frame) %>%
-  dplyr::summarise(roadX = 0, roadZ = mean(rotatedZ)) %>%
+  dplyr::summarise(roadX = 0, roadZ = mean(rotatedZ), WorldYaw = mean(WorldYaw)) %>%
   dplyr::mutate(heading_rads = heading / 180 * pi) %>%
   dplyr::group_by(heading_rads, frame) %>%
   dplyr::mutate(roadX = roadX * cos(heading_rads) - roadZ * sin(heading_rads)) %>%
@@ -290,6 +327,12 @@ for (i in 1:length(dat$ComputedHeading)){
 dat <- dat %>%
   dplyr::mutate(ComputedHeading = abs(ComputedHeading)) %>%
   dplyr::mutate(ComputedHeading_radians = ComputedHeading / 180 * pi)
+
+
+trajectory.2 <- trajectory %>%
+  dplyr::group_by(heading, frame) %>%
+  dplyr::mutate(lineWorldYaw = WorldYaw - heading) %>%
+  dplyr::mutate(computed_angle = abs(lineWorldYaw - WorldYaw))
 ```
 
 Heading angle is computed whilst also accounting for carry over from the resetting of the steering wheel angle

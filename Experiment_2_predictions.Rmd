@@ -1,0 +1,211 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Threshold versus Accumulator predictions
+
+This script generates predictions of reaction times and lateral position errors for Threshold and Accumulator frameworks. The simulation data from the TrackSimulation.py script is used in this script to generate predictions. 
+
+## Packages 
+
+```{r}
+if(!require(here)) install.packages("here")
+library(here)
+
+if(!require(tidyr)) install.packages("tidyr")
+library(tidyr)
+
+if(!require(dplyr)) install.packages("dplyr")
+library(dplyr)
+
+if(!require(ggplot2)) install.packages("ggplot2")
+library(ggplot2)
+
+if(!require(signal)) install.packages("signal")
+library(signal)
+
+if(!require(Rmisc)) install.packages("Rmisc")
+library(Rmisc)
+
+if(!require(purrr)) install.packages("purrr")
+library(purrr)
+
+if(!require(stringr)) install.packages("stringr")
+library(stringr)
+
+if(!require(lme4)) install.packages("lme4")
+library(lme4)
+
+if(!require(lmerTest)) install.packages("lmerTest")
+library(lmerTest)
+
+if(!require(ggsci)) install.packages("ggsci")
+library(ggsci)
+
+if(!require(stargazer)) install.packages("stargazer")
+library(stargazer)
+
+if(!require(viridis)) install.packages("viridis")
+library(viridis)
+
+if(!require(pracma)) install.packages("pracma")
+library(pracma)
+
+if(!require(gridExtra)) install.packages("gridExtra")
+library(gridExtra)
+
+if(!require(arm)) install.packages("arm")
+library(arm)
+
+if(!require(performance)) install.packages("performance")
+library(performance)
+
+if(!require(wesanderson)) install.packages("wesanderson")
+library(wesanderson)
+
+if(!require(data.table)) install.packages("data.table")
+library(data.table)
+
+if(!require(readr)) install.packages("readr")
+library(readr)
+```
+
+## Combing visual angle and lateral position error metrics into one dataframe
+
+Visual angle has already been converted from radians to degrees in the TrackSimulation.py script. 
+
+```{r}
+"lateral position error"
+latpos <- read.csv(here::here("TvA_analysis/ExpSimulation/TrackSimSteeringBias.csv"), header = FALSE) %>%
+  dplyr::rename_all(~ c("0.5", "1", "1.5", "2")) %>%
+  tidyr::pivot_longer(cols = 1:4, names_to = "heading", values_to = "latpos")
+
+"visual angle"
+visangle <- read.csv(here::here("TvA_analysis/ExpSimulation/TrackSimVisAngleCorrected.csv"), header = FALSE) %>%
+  dplyr::rename_all(~ c("0.5", "1", "1.5", "2")) %>%
+  dplyr::mutate(frame = row_number(), timestamp = frame / 60) %>%
+  tidyr::pivot_longer(cols = 1:4, names_to = "heading", values_to = "vis.angle.corrected") %>%
+  dplyr::bind_cols(latpos) %>%
+  dplyr::select(-heading...5) %>%
+  dplyr::rename("heading" = "heading...3")
+```
+
+## Creating starting position conditions
+
+A 4 and 8 m starting position is equivalent to a .5 s and 1 s occlusions respectively. Therefore, to create the conditions from the 0 m starting position conditions, I only have filter the data along .5 and 1 s. 
+
+```{r}
+dat <- data.frame()
+
+  for (t in c(0, .5, 1)){
+    visangle.tmp <- visangle %>%
+      dplyr::filter(heading == 1 | heading == 2) %>%
+      dplyr::mutate(occlusion = t) %>%
+      dplyr::filter(timestamp >= t) %>%
+      dplyr::group_by(heading, occlusion) %>%
+      dplyr::mutate(frame = row_number(), timestamp = frame / 60) %>%
+      dplyr::filter(frame <= 150) %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(startingpos = case_when(occlusion == 0 ~ 0,
+                                            occlusion == .5 ~ 4,
+                                            occlusion == 1 ~ 8))
+    
+    dat <- rbind(dat,  visangle.tmp)
+  }
+
+"Increase in visual angle over time for each condition"
+ggplot() +
+  geom_line(dat, mapping = aes(x = timestamp, y = vis.angle.corrected, col = as.factor(startingpos))) +
+  facet_wrap(~ heading)
+```
+
+## Generating Accumulator predictions
+
+For each starting position and heading value, the visual angle is accumulated and the time and lateral position is selected based on a fixed accumulated decision boundary. 
+
+
+```{r}
+df_accum <- data.frame()
+
+for (s in c(0, 4, 8)){
+  for (h in c(1, 2)){
+    
+    dat_tmp <- dat %>%
+      dplyr::filter(startingpos == s, heading == h)
+    
+    for (t in c(3)) {
+      
+      dat_tmp <- dat_tmp %>%
+        dplyr::filter(cumsum(vis.angle.corrected) > t)
+      
+      dat.time.tmp <- dat_tmp[10,]
+    
+    df_accum <-  rbind(df_accum,  dat.time.tmp)
+      
+    }
+    
+  }
+}
+
+"reaction time predictions accumulator"
+ggplot(df_accum, mapping = aes(x = as.numeric(heading), y = timestamp, linetype = as.factor(startingpos))) +
+  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
+  geom_line()
+
+"lateral position error predictions accumulator"
+ggplot(df_accum, mapping = aes(x = as.numeric(heading), y = latpos, linetype = as.factor(startingpos))) +
+  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
+  geom_line()
+
+"Data saving"
+write.csv(df_accum, file = here::here("TvA_analysis/Data/Sim_Data/df_accum.csv"))
+```
+
+## Generating Threshold predictions
+
+Similar to the above however for each starting position-heading condition, timings and lateral position error are chosen when the non-accumulated visual angle surpasses a fixed value.
+
+
+```{r}
+"empty dataframe"
+df_thresh <- data.frame()
+
+for (s in c(0, 4, 8)){
+  for (h in c(1, 2)){
+    dat_tmp <- dat %>%
+      dplyr::filter(startingpos == s, heading == h)
+    
+    for (t in c(1.5)) {
+      
+      dat_tmp <- dat_tmp %>%
+        dplyr::filter(vis.angle.corrected > t)
+      
+      dat.time.tmp <- dat_tmp[10,]
+    
+    df_thresh <-  rbind(df_thresh,  dat.time.tmp)
+      
+    }
+    
+  }
+}
+
+"reaction time predictions threshold"
+ggplot(df_thresh, mapping = aes(x = as.numeric(heading), y = timestamp, linetype = as.factor(startingpos))) +
+  geom_line() +
+  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) 
+
+"lateral position error predictions threshold"
+ggplot(df_thresh, mapping = aes(x = as.numeric(heading), y = latpos, linetype = as.factor(startingpos))) +
+  geom_line() +
+  scale_x_continuous(name = "Orientation (°)", breaks = c(1, 2)) +
+  ylim(0, .35)
+
+"Data saving"
+write.csv(df_thresh, file = here::here("TvA_analysis/Data/Sim_Data/df_thresh.csv"))
+```
+
