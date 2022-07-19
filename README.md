@@ -1,1 +1,14 @@
-Data and analysis for "Steering is inititated based on error accumulation" manuscript. exp_1 script produces predictions for supplemental material whilst exp_2 script produces predictions for main experiment. Pre-processing and multilevel modelling are found in Experiment_2_analysis and Experiment_2_modelling respectively.  
+This repo contains the data and analysis for the manuscript "Steering is inititated based on error accumulation" manuscript. 
+
+The ExpSimulation folder contains code (TrackSimulation.py) to simulate an observer moving at 8 m/s at varying angles of orientation relative to a straight road-line. This code calculates the visual angle and steering bias for orientations ranging from 0.5-2 degrees.
+
+The Experiment_2_predictions script takes the visual angle and steeringbias metrics and generates predictions under Threshold and Accumulator frameworks for the conditions within the current experiment.
+
+Experiment_2_analysis.Rmd is a script that pre-processes the experiment data  and generates reaction times, lateral position errors, and steering rates for each condition.
+
+Experiment_2_modelling.Rmd takes the outputted dataframes from Experiment2_analysis.Rmd and fits multilevel models that are used to generate inferences on the data.
+
+TvA_finished_figures_Exp2_only.Rmd creates figures from the data and what are used within the manuscript. 
+
+Generating_Timecourse_Data.Rmd creates timecourse within the TvA_finished_figures_Exp2_only.Rmd for plotting average trajectories. 
+
