@@ -1,4 +1,6 @@
-This repo contains the data and analysis for the manuscript "Steering is inititated based on error accumulation" manuscript. 
+This repo contains the data and analysis for the following manuscript:
+
+Goodridge, C. M., Mole, C. D., Billington, J., Markkula, G., & Wilkie, R. M. (2022). Steering is initiated based on error accumulation. Journal of Experimental Psychology: Human Perception and Performance, 48(1), 64.
 
 The ExpSimulation folder contains code (TrackSimulation.py) to simulate an observer moving at 8 m/s at varying angles of orientation relative to a straight road-line. This code calculates the visual angle and steering bias for orientations ranging from 0.5-2 degrees.
 
