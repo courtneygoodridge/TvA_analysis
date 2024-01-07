@@ -24,5 +24,5 @@ The `Experiment_2_analysis.Rmd` script pre-processes the experimental data  and 
 ### Manuscript figures
 `TvA_finished_figures_Exp2_only.Rmd` creates figures from the data and what are used within the manuscript. 
 
-`Generating_Timecourse_Data.Rmd` creates timecourse within the TvA_finished_figures_Exp2_only.Rmd for plotting average trajectories. 
+`Generating_Timecourse_Data.Rmd` creates timecourse within the `TvA_finished_figures_Exp2_only.Rmd` for plotting average trajectories. 
 
