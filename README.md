@@ -12,20 +12,15 @@ The predictions of two cognitive frameworks were compared. A Threshold framework
 
 **Code and analysis**
 
-To replicate the analysis, people should focus on the `Experiment_2_modelling.Rmd` script. This take the `magnitudedata.csv` and fit multilevel models for each metric (reaction time, lateral position error, and steering rate). 
+To replicate the analysis, people should focus on the `Experiment_2_modelling.Rmd` script. This take the `magnitudedata.csv` and fit multilevel models for each metric (reaction time, lateral position error, and steering rate). To run this script, clone the `TvA_analysis` repository into your working directory (you can find this by running the `here::here()` function in the R command line). Once the repository is in your working directory, run each chunk of code to run the models and analysis. 
 
-
-takes the outputted dataframes from Experiment2_analysis.Rmd and fits multilevel models that are used to generate inferences on the data.
-
-The ExpSimulation folder contains code (`TrackSimulation.py`) to simulate an observer moving at 8 m/s at varying angles of orientation relative to a straight road-line. This code calculates the visual angle and steering bias for orientations ranging from 0.5-2 degrees.
+The remaining scripts are largely pre-processing steps of the raw data which are included for completeness, and in case of future modelling attempts. The ExpSimulation folder contains code (`TrackSimulation.py`) to simulate an observer moving at 8 m/s at varying angles of orientation relative to a straight road-line. This code calculates the visual angle and steering bias for orientations ranging from 0.5-2 degrees. These perceptual variables are used as inputs to simulate responses according to Threshold and Accumulator frameworks. 
 
 The `Experiment_2_predictions.Rmd` script takes the visual angle and steering bias metrics and generates predictions under Threshold and Accumulator frameworks for the conditions within the current experiment.
 
-`Experiment_2_analysis.Rmd` is a script that pre-processes the experimental data  and generates reaction times, lateral position errors, and steering rates for each trial.
+The `Experiment_2_analysis.Rmd` script pre-processes the experimental data  and generates reaction times, lateral position errors, and steering rates for each trial from participant data. 
 
+`TvA_finished_figures_Exp2_only.Rmd` creates figures from the data and what are used within the manuscript. 
 
-
-TvA_finished_figures_Exp2_only.Rmd creates figures from the data and what are used within the manuscript. 
-
-Generating_Timecourse_Data.Rmd creates timecourse within the TvA_finished_figures_Exp2_only.Rmd for plotting average trajectories. 
+`Generating_Timecourse_Data.Rmd` creates timecourse within the TvA_finished_figures_Exp2_only.Rmd for plotting average trajectories. 
 
