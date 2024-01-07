@@ -8,7 +8,11 @@ This experiment aimed to investigate how people initiate steering responses when
 
 <img width="353" alt="image" src="https://github.com/courtneygoodridge/TvA_analysis/assets/44811378/ee0cb499-2dc8-4dab-a88b-c1e0a9754136">
 
-The predictions of two cognitive frameworks were compared. A Threshold framework predicted that drivers would initiate a steering response when they reached a fixed distance from the road-line. Conversely, an Accumulator framework predicted drivers would accumulate perceptual error signals over time, and intiate a steering response once this accumulated quantity surpassed a fixed threshold. As is highlighted in the manuscript, this produces distinct predictions in the timing and magnitude of steering responses. 
+The experiment was run in a fixed based simulator in the School of Psychology at the University of Leeds. Details of th specifications can be found in the manuscript, however a simple schematic is presented here (Figure taken from Mole et al, 2016). 
+
+<img width="277" alt="image" src="https://github.com/courtneygoodridge/TvA_analysis/assets/44811378/31e75192-2a35-4c45-b80a-725ac8f3f9c1">
+
+Predictions for how driver produce steering responses come from two competing cognitive frameworks. A Threshold framework predicted that drivers would initiate a steering response when they reached a fixed distance from the road-line. Conversely, an Accumulator framework predicted drivers would accumulate perceptual error signals over time, and intiate a steering response once this accumulated quantity surpassed a fixed threshold. As is highlighted in the manuscript, this produces distinct predictions in the timing and magnitude of steering responses. 
 
 ## Code and analysis
 ### Statistical modelling
