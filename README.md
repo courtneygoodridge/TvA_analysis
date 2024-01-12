@@ -1,4 +1,4 @@
-# Steering is initiated based on error accumulation
+# Steering is initiated based on error accumulation: code and analysis
 
 ## Reference
 Goodridge, C. M., Mole, C. D., Billington, J., Markkula, G., & Wilkie, R. M. (2022). Steering is initiated based on error accumulation. Journal of Experimental Psychology: Human Perception and Performance, 48(1), 64.
