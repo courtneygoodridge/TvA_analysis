@@ -1,7 +1,7 @@
 # Steering is initiated based on error accumulation: code and analysis
 
 ## Reference
-Goodridge, C. M., Mole, C. D., Billington, J., Markkula, G., & Wilkie, R. M. (2022). Steering is initiated based on error accumulation. Journal of Experimental Psychology: Human Perception and Performance, 48(1), 64.
+**If you using any elements of this repository, please cite**: Goodridge, C. M., Mole, C. D., Billington, J., Markkula, G., & Wilkie, R. M. (2022). Steering is initiated based on error accumulation. Journal of Experimental Psychology: Human Perception and Performance, 48(1), 64.
 
 ## Overview: experimental design 
 This experiment aimed to investigate how people initiate steering responses when drivers detect an error between their current heading and a target (in this experiment, a road-line). The heading of drivers was pertubed as various angles, left and right, relative to the target road-line. 
